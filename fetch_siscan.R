@@ -57,13 +57,13 @@ tryCatch({
   }
 
   summary_stats <- list(
-    total_exames = total_exames,
-    total_municipios = total_municipios,
-    periodo = periodo,
-    ultima_atualizacao = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ")
+    total_exames = as.integer(total_exames),
+    total_municipios = as.integer(total_municipios),
+    periodo = as.character(periodo),
+    ultima_atualizacao = as.character(format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ"))
   )
 
-  write_json(summary_stats, "data/siscan_summary.json", pretty = TRUE)
+  write_json(summary_stats, "data/siscan_summary.json", pretty = TRUE, auto_unbox = TRUE)
   cat(sprintf("✓ Summary: %d exames, %d municípios, %s\n", total_exames, total_municipios, periodo))
 
   cat("\nSUCCESS: Data processed\n")
