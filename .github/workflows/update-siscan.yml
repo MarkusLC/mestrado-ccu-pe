@@ -19,8 +19,7 @@ jobs:
 
       - name: Install R dependencies
         run: |
-          install.packages(c('remotes', 'renv', 'jsonlite', 'dplyr', 'tidyr'))
-          remotes::install_github('rfsaldanha/microdatasus')
+          install.packages(c('jsonlite', 'dplyr', 'tidyr', 'httr', 'xml2'))
         shell: Rscript {0}
 
       - name: Fetch SISCAN data
