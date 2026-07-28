@@ -12,12 +12,12 @@ suppressPackageStartupMessages({
 cat("Fetching SISCAN data from DATASUS...\n")
 
 tryCatch({
-  # Fetch SIA (Ambulatorial) data — includes citopatológico
-  cat("Pulling SIA data (2018-2026)...\n")
+  # Fetch SIA-PA (Procedimentos Ambulatoriais) — includes citopatológico
+  cat("Pulling SIA-PA data (2018-2026)...\n")
   dados <- fetch_datasus(
     year_start = 2018,
     year_end = 2026,
-    information_system = "SIA"
+    information_system = "SIA-PA"
   )
 
   cat("Raw data fetched. Processing...\n")
