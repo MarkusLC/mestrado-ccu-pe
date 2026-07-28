@@ -1,32 +1,152 @@
 [
   {
-    "municipio": "<html lang=\"pt-BR\">",
-    "ano_mes": "",
-    "exames": 0
+    "municipio": "Afrânio",
+    "ano": "2025",
+    "exames": 37
   },
   {
-    "municipio": "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">",
-    "ano_mes": "",
-    "exames": 0
+    "municipio": "Afrânio",
+    "ano": "2026",
+    "exames": 37
   },
   {
-    "municipio": "<head><h1>ERRO:</h1></head>",
-    "ano_mes": "",
-    "exames": 0
+    "municipio": "Arcoverde",
+    "ano": "2025",
+    "exames": 129
   },
   {
-    "municipio": "<html><body>",
-    "ano_mes": "",
-    "exames": 0
+    "municipio": "Arcoverde",
+    "ano": "2026",
+    "exames": 129
   },
   {
-    "municipio": "<h3>Arquivo DEF não encontrado: sia/cnv/paproc.def</h3>",
-    "ano_mes": "",
-    "exames": 0
+    "municipio": "Belém de Maria",
+    "ano": "2025",
+    "exames": 117
   },
   {
-    "municipio": "</body></html>",
-    "ano_mes": "",
-    "exames": 0
+    "municipio": "Belém de Maria",
+    "ano": "2026",
+    "exames": 117
+  },
+  {
+    "municipio": "Cabo de Santo Agostinho",
+    "ano": "2025",
+    "exames": 271
+  },
+  {
+    "municipio": "Cabo de Santo Agostinho",
+    "ano": "2026",
+    "exames": 271
+  },
+  {
+    "municipio": "Camaragibe",
+    "ano": "2025",
+    "exames": 2
+  },
+  {
+    "municipio": "Camaragibe",
+    "ano": "2026",
+    "exames": 2
+  },
+  {
+    "municipio": "Caruaru",
+    "ano": "2025",
+    "exames": 65
+  },
+  {
+    "municipio": "Caruaru",
+    "ano": "2026",
+    "exames": 65
+  },
+  {
+    "municipio": "Garanhuns",
+    "ano": "2025",
+    "exames": 164
+  },
+  {
+    "municipio": "Garanhuns",
+    "ano": "2026",
+    "exames": 164
+  },
+  {
+    "municipio": "Goiana",
+    "ano": "2025",
+    "exames": 49
+  },
+  {
+    "municipio": "Goiana",
+    "ano": "2026",
+    "exames": 49
+  },
+  {
+    "municipio": "Gravatá",
+    "ano": "2025",
+    "exames": 65
+  },
+  {
+    "municipio": "Gravatá",
+    "ano": "2026",
+    "exames": 65
+  },
+  {
+    "municipio": "Jaboatão dos Guararapes",
+    "ano": "2025",
+    "exames": 154
+  },
+  {
+    "municipio": "Jaboatão dos Guararapes",
+    "ano": "2026",
+    "exames": 154
+  },
+  {
+    "municipio": "Moreno",
+    "ano": "2025",
+    "exames": 24
+  },
+  {
+    "municipio": "Moreno",
+    "ano": "2026",
+    "exames": 24
+  },
+  {
+    "municipio": "Olinda",
+    "ano": "2025",
+    "exames": 690
+  },
+  {
+    "municipio": "Olinda",
+    "ano": "2026",
+    "exames": 690
+  },
+  {
+    "municipio": "Paulista",
+    "ano": "2025",
+    "exames": 40
+  },
+  {
+    "municipio": "Paulista",
+    "ano": "2026",
+    "exames": 40
+  },
+  {
+    "municipio": "Petrolina",
+    "ano": "2025",
+    "exames": 33
+  },
+  {
+    "municipio": "Petrolina",
+    "ano": "2026",
+    "exames": 33
+  },
+  {
+    "municipio": "Recife",
+    "ano": "2025",
+    "exames": 2805
+  },
+  {
+    "municipio": "Recife",
+    "ano": "2026",
+    "exames": 2805
   }
 ]
