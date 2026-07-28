@@ -5,6 +5,9 @@ on:
     - cron: '0 12 15 * *'  # Roda todo dia 15 às 12h UTC
   workflow_dispatch:  # Permite trigger manual
 
+permissions:
+  contents: write
+
 jobs:
   fetch-and-commit:
     runs-on: ubuntu-latest
