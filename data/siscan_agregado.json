@@ -1,152 +1,677 @@
 [
   {
     "municipio": "Afrânio",
+    "ano": "2018",
+    "exames": 74
+  },
+  {
+    "municipio": "Afrânio",
+    "ano": "2019",
+    "exames": 74
+  },
+  {
+    "municipio": "Afrânio",
+    "ano": "2020",
+    "exames": 74
+  },
+  {
+    "municipio": "Afrânio",
+    "ano": "2021",
+    "exames": 74
+  },
+  {
+    "municipio": "Afrânio",
+    "ano": "2022",
+    "exames": 74
+  },
+  {
+    "municipio": "Afrânio",
+    "ano": "2023",
+    "exames": 74
+  },
+  {
+    "municipio": "Afrânio",
+    "ano": "2024",
+    "exames": 74
+  },
+  {
+    "municipio": "Afrânio",
     "ano": "2025",
-    "exames": 37
+    "exames": 74
   },
   {
     "municipio": "Afrânio",
     "ano": "2026",
-    "exames": 37
+    "exames": 74
+  },
+  {
+    "municipio": "Arcoverde",
+    "ano": "2018",
+    "exames": 258
+  },
+  {
+    "municipio": "Arcoverde",
+    "ano": "2019",
+    "exames": 258
+  },
+  {
+    "municipio": "Arcoverde",
+    "ano": "2020",
+    "exames": 258
+  },
+  {
+    "municipio": "Arcoverde",
+    "ano": "2021",
+    "exames": 258
+  },
+  {
+    "municipio": "Arcoverde",
+    "ano": "2022",
+    "exames": 258
+  },
+  {
+    "municipio": "Arcoverde",
+    "ano": "2023",
+    "exames": 258
+  },
+  {
+    "municipio": "Arcoverde",
+    "ano": "2024",
+    "exames": 258
   },
   {
     "municipio": "Arcoverde",
     "ano": "2025",
-    "exames": 129
+    "exames": 258
   },
   {
     "municipio": "Arcoverde",
     "ano": "2026",
-    "exames": 129
+    "exames": 258
+  },
+  {
+    "municipio": "Belém de Maria",
+    "ano": "2018",
+    "exames": 234
+  },
+  {
+    "municipio": "Belém de Maria",
+    "ano": "2019",
+    "exames": 234
+  },
+  {
+    "municipio": "Belém de Maria",
+    "ano": "2020",
+    "exames": 234
+  },
+  {
+    "municipio": "Belém de Maria",
+    "ano": "2021",
+    "exames": 234
+  },
+  {
+    "municipio": "Belém de Maria",
+    "ano": "2022",
+    "exames": 234
+  },
+  {
+    "municipio": "Belém de Maria",
+    "ano": "2023",
+    "exames": 234
+  },
+  {
+    "municipio": "Belém de Maria",
+    "ano": "2024",
+    "exames": 234
   },
   {
     "municipio": "Belém de Maria",
     "ano": "2025",
-    "exames": 117
+    "exames": 234
   },
   {
     "municipio": "Belém de Maria",
     "ano": "2026",
-    "exames": 117
+    "exames": 234
+  },
+  {
+    "municipio": "Cabo de Santo Agostinho",
+    "ano": "2018",
+    "exames": 542
+  },
+  {
+    "municipio": "Cabo de Santo Agostinho",
+    "ano": "2019",
+    "exames": 542
+  },
+  {
+    "municipio": "Cabo de Santo Agostinho",
+    "ano": "2020",
+    "exames": 542
+  },
+  {
+    "municipio": "Cabo de Santo Agostinho",
+    "ano": "2021",
+    "exames": 542
+  },
+  {
+    "municipio": "Cabo de Santo Agostinho",
+    "ano": "2022",
+    "exames": 542
+  },
+  {
+    "municipio": "Cabo de Santo Agostinho",
+    "ano": "2023",
+    "exames": 542
+  },
+  {
+    "municipio": "Cabo de Santo Agostinho",
+    "ano": "2024",
+    "exames": 542
   },
   {
     "municipio": "Cabo de Santo Agostinho",
     "ano": "2025",
-    "exames": 271
+    "exames": 542
   },
   {
     "municipio": "Cabo de Santo Agostinho",
     "ano": "2026",
-    "exames": 271
+    "exames": 542
+  },
+  {
+    "municipio": "Camaragibe",
+    "ano": "2018",
+    "exames": 4
+  },
+  {
+    "municipio": "Camaragibe",
+    "ano": "2019",
+    "exames": 4
+  },
+  {
+    "municipio": "Camaragibe",
+    "ano": "2020",
+    "exames": 4
+  },
+  {
+    "municipio": "Camaragibe",
+    "ano": "2021",
+    "exames": 4
+  },
+  {
+    "municipio": "Camaragibe",
+    "ano": "2022",
+    "exames": 4
+  },
+  {
+    "municipio": "Camaragibe",
+    "ano": "2023",
+    "exames": 4
+  },
+  {
+    "municipio": "Camaragibe",
+    "ano": "2024",
+    "exames": 4
   },
   {
     "municipio": "Camaragibe",
     "ano": "2025",
-    "exames": 2
+    "exames": 4
   },
   {
     "municipio": "Camaragibe",
     "ano": "2026",
-    "exames": 2
+    "exames": 4
+  },
+  {
+    "municipio": "Caruaru",
+    "ano": "2018",
+    "exames": 130
+  },
+  {
+    "municipio": "Caruaru",
+    "ano": "2019",
+    "exames": 130
+  },
+  {
+    "municipio": "Caruaru",
+    "ano": "2020",
+    "exames": 130
+  },
+  {
+    "municipio": "Caruaru",
+    "ano": "2021",
+    "exames": 130
+  },
+  {
+    "municipio": "Caruaru",
+    "ano": "2022",
+    "exames": 130
+  },
+  {
+    "municipio": "Caruaru",
+    "ano": "2023",
+    "exames": 130
+  },
+  {
+    "municipio": "Caruaru",
+    "ano": "2024",
+    "exames": 130
   },
   {
     "municipio": "Caruaru",
     "ano": "2025",
-    "exames": 65
+    "exames": 130
   },
   {
     "municipio": "Caruaru",
     "ano": "2026",
-    "exames": 65
+    "exames": 130
+  },
+  {
+    "municipio": "Garanhuns",
+    "ano": "2018",
+    "exames": 328
+  },
+  {
+    "municipio": "Garanhuns",
+    "ano": "2019",
+    "exames": 328
+  },
+  {
+    "municipio": "Garanhuns",
+    "ano": "2020",
+    "exames": 328
+  },
+  {
+    "municipio": "Garanhuns",
+    "ano": "2021",
+    "exames": 328
+  },
+  {
+    "municipio": "Garanhuns",
+    "ano": "2022",
+    "exames": 328
+  },
+  {
+    "municipio": "Garanhuns",
+    "ano": "2023",
+    "exames": 328
+  },
+  {
+    "municipio": "Garanhuns",
+    "ano": "2024",
+    "exames": 328
   },
   {
     "municipio": "Garanhuns",
     "ano": "2025",
-    "exames": 164
+    "exames": 328
   },
   {
     "municipio": "Garanhuns",
     "ano": "2026",
-    "exames": 164
+    "exames": 328
+  },
+  {
+    "municipio": "Goiana",
+    "ano": "2018",
+    "exames": 98
+  },
+  {
+    "municipio": "Goiana",
+    "ano": "2019",
+    "exames": 98
+  },
+  {
+    "municipio": "Goiana",
+    "ano": "2020",
+    "exames": 98
+  },
+  {
+    "municipio": "Goiana",
+    "ano": "2021",
+    "exames": 98
+  },
+  {
+    "municipio": "Goiana",
+    "ano": "2022",
+    "exames": 98
+  },
+  {
+    "municipio": "Goiana",
+    "ano": "2023",
+    "exames": 98
+  },
+  {
+    "municipio": "Goiana",
+    "ano": "2024",
+    "exames": 98
   },
   {
     "municipio": "Goiana",
     "ano": "2025",
-    "exames": 49
+    "exames": 98
   },
   {
     "municipio": "Goiana",
     "ano": "2026",
-    "exames": 49
+    "exames": 98
+  },
+  {
+    "municipio": "Gravatá",
+    "ano": "2018",
+    "exames": 130
+  },
+  {
+    "municipio": "Gravatá",
+    "ano": "2019",
+    "exames": 130
+  },
+  {
+    "municipio": "Gravatá",
+    "ano": "2020",
+    "exames": 130
+  },
+  {
+    "municipio": "Gravatá",
+    "ano": "2021",
+    "exames": 130
+  },
+  {
+    "municipio": "Gravatá",
+    "ano": "2022",
+    "exames": 130
+  },
+  {
+    "municipio": "Gravatá",
+    "ano": "2023",
+    "exames": 130
+  },
+  {
+    "municipio": "Gravatá",
+    "ano": "2024",
+    "exames": 130
   },
   {
     "municipio": "Gravatá",
     "ano": "2025",
-    "exames": 65
+    "exames": 130
   },
   {
     "municipio": "Gravatá",
     "ano": "2026",
-    "exames": 65
+    "exames": 130
+  },
+  {
+    "municipio": "Jaboatão dos Guararapes",
+    "ano": "2018",
+    "exames": 308
+  },
+  {
+    "municipio": "Jaboatão dos Guararapes",
+    "ano": "2019",
+    "exames": 308
+  },
+  {
+    "municipio": "Jaboatão dos Guararapes",
+    "ano": "2020",
+    "exames": 362
+  },
+  {
+    "municipio": "Jaboatão dos Guararapes",
+    "ano": "2021",
+    "exames": 308
+  },
+  {
+    "municipio": "Jaboatão dos Guararapes",
+    "ano": "2022",
+    "exames": 308
+  },
+  {
+    "municipio": "Jaboatão dos Guararapes",
+    "ano": "2023",
+    "exames": 308
+  },
+  {
+    "municipio": "Jaboatão dos Guararapes",
+    "ano": "2024",
+    "exames": 308
   },
   {
     "municipio": "Jaboatão dos Guararapes",
     "ano": "2025",
-    "exames": 154
+    "exames": 308
   },
   {
     "municipio": "Jaboatão dos Guararapes",
     "ano": "2026",
-    "exames": 154
+    "exames": 308
+  },
+  {
+    "municipio": "Moreno",
+    "ano": "2018",
+    "exames": 48
+  },
+  {
+    "municipio": "Moreno",
+    "ano": "2019",
+    "exames": 48
+  },
+  {
+    "municipio": "Moreno",
+    "ano": "2020",
+    "exames": 48
+  },
+  {
+    "municipio": "Moreno",
+    "ano": "2021",
+    "exames": 48
+  },
+  {
+    "municipio": "Moreno",
+    "ano": "2022",
+    "exames": 48
+  },
+  {
+    "municipio": "Moreno",
+    "ano": "2023",
+    "exames": 48
+  },
+  {
+    "municipio": "Moreno",
+    "ano": "2024",
+    "exames": 48
   },
   {
     "municipio": "Moreno",
     "ano": "2025",
-    "exames": 24
+    "exames": 48
   },
   {
     "municipio": "Moreno",
     "ano": "2026",
-    "exames": 24
+    "exames": 48
+  },
+  {
+    "municipio": "Olinda",
+    "ano": "2018",
+    "exames": 1380
+  },
+  {
+    "municipio": "Olinda",
+    "ano": "2019",
+    "exames": 1380
+  },
+  {
+    "municipio": "Olinda",
+    "ano": "2020",
+    "exames": 1380
+  },
+  {
+    "municipio": "Olinda",
+    "ano": "2021",
+    "exames": 1380
+  },
+  {
+    "municipio": "Olinda",
+    "ano": "2022",
+    "exames": 1380
+  },
+  {
+    "municipio": "Olinda",
+    "ano": "2023",
+    "exames": 1380
+  },
+  {
+    "municipio": "Olinda",
+    "ano": "2024",
+    "exames": 1380
   },
   {
     "municipio": "Olinda",
     "ano": "2025",
-    "exames": 690
+    "exames": 1380
   },
   {
     "municipio": "Olinda",
     "ano": "2026",
-    "exames": 690
+    "exames": 1380
+  },
+  {
+    "municipio": "Paulista",
+    "ano": "2018",
+    "exames": 80
+  },
+  {
+    "municipio": "Paulista",
+    "ano": "2019",
+    "exames": 80
+  },
+  {
+    "municipio": "Paulista",
+    "ano": "2020",
+    "exames": 80
+  },
+  {
+    "municipio": "Paulista",
+    "ano": "2021",
+    "exames": 80
+  },
+  {
+    "municipio": "Paulista",
+    "ano": "2022",
+    "exames": 80
+  },
+  {
+    "municipio": "Paulista",
+    "ano": "2023",
+    "exames": 80
+  },
+  {
+    "municipio": "Paulista",
+    "ano": "2024",
+    "exames": 80
   },
   {
     "municipio": "Paulista",
     "ano": "2025",
-    "exames": 40
+    "exames": 80
   },
   {
     "municipio": "Paulista",
     "ano": "2026",
-    "exames": 40
+    "exames": 80
+  },
+  {
+    "municipio": "Petrolina",
+    "ano": "2018",
+    "exames": 66
+  },
+  {
+    "municipio": "Petrolina",
+    "ano": "2019",
+    "exames": 66
+  },
+  {
+    "municipio": "Petrolina",
+    "ano": "2020",
+    "exames": 66
+  },
+  {
+    "municipio": "Petrolina",
+    "ano": "2021",
+    "exames": 66
+  },
+  {
+    "municipio": "Petrolina",
+    "ano": "2022",
+    "exames": 66
+  },
+  {
+    "municipio": "Petrolina",
+    "ano": "2023",
+    "exames": 66
+  },
+  {
+    "municipio": "Petrolina",
+    "ano": "2024",
+    "exames": 66
   },
   {
     "municipio": "Petrolina",
     "ano": "2025",
-    "exames": 33
+    "exames": 66
   },
   {
     "municipio": "Petrolina",
     "ano": "2026",
-    "exames": 33
+    "exames": 66
+  },
+  {
+    "municipio": "Recife",
+    "ano": "2018",
+    "exames": 5610
+  },
+  {
+    "municipio": "Recife",
+    "ano": "2019",
+    "exames": 5610
+  },
+  {
+    "municipio": "Recife",
+    "ano": "2020",
+    "exames": 13222
+  },
+  {
+    "municipio": "Recife",
+    "ano": "2021",
+    "exames": 5610
+  },
+  {
+    "municipio": "Recife",
+    "ano": "2022",
+    "exames": 5610
+  },
+  {
+    "municipio": "Recife",
+    "ano": "2023",
+    "exames": 5610
+  },
+  {
+    "municipio": "Recife",
+    "ano": "2024",
+    "exames": 5610
   },
   {
     "municipio": "Recife",
     "ano": "2025",
-    "exames": 2805
+    "exames": 5610
   },
   {
     "municipio": "Recife",
     "ano": "2026",
-    "exames": 2805
+    "exames": 5610
   }
 ]
