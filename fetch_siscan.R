@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
-# Fetch SISCAN (Citopatológico) data from DATASUS via microdatasus
-# Aggregates by municipality and month, saves as JSON
+# SISCAN Data Fetch — REAL DATA ONLY
+# No fake data, no fallbacks to examples
+# Direct fetch from DATASUS via microdatasus
 
 suppressPackageStartupMessages({
   library(microdatasus)
@@ -9,120 +10,104 @@ suppressPackageStartupMessages({
   library(dplyr)
 })
 
-cat("Fetching SISCAN data from DATASUS...\n")
+cat("🔄 SISCAN Fetch - REAL DATA ONLY\n")
+cat("================================\n\n")
 
-tryCatch({
-  # Fetch SIA-PA (Procedimentos Ambulatoriais) — includes citopatológico
-  cat("Pulling SIA-PA data (2018-2026)...\n")
+fetch_real_data <- function() {
+  cat("📡 Connecting to DATASUS...\n")
+
+  # SIA-PA = Procedimentos Ambulatoriais (includes citopatologia)
   dados <- fetch_datasus(
     year_start = 2018,
     year_end = 2026,
     information_system = "SIA-PA"
   )
 
-  cat("Raw data fetched. Processing...\n")
-
-  if (is.null(dados)) {
-    cat("ERROR: fetch_datasus returned NULL\n")
-    quit(status = 1)
+  if (is.null(dados) || nrow(as.data.frame(dados)) == 0) {
+    stop("DATASUS returned no data")
   }
 
-  # Convert to data.frame if needed
-  if (!is.data.frame(dados)) {
-    dados <- as.data.frame(dados)
-  }
+  dados <- as.data.frame(dados)
+  cat(sprintf("✅ Fetched: %d rows\n", nrow(dados)))
 
-  cat(sprintf("Rows: %d, Columns: %d\n", nrow(dados), ncol(dados)))
-  cat("Columns:", paste(head(colnames(dados), 10), collapse = ", "), "...\n")
-
-  # Filter for citopatológico (cervical cytology)
-  # SISCAN procedure codes typically start with 0201
+  # Filter for citopatologia (cervical cytology codes)
+  # Codes: 020101, 020102, 020103, etc
   if ("PA_PROC_ID" %in% colnames(dados)) {
+    cat("🔍 Filtering for citopatologia...\n")
+
     dados_cito <- dados %>%
-      filter(grepl("^0201", PA_PROC_ID, ignore.case = TRUE)) %>%
+      filter(grepl("^0201", as.character(PA_PROC_ID), ignore.case = TRUE)) %>%
       select(any_of(c("PA_MUNOFN", "PA_DT_PROC"))) %>%
       filter(!is.na(PA_MUNOFN), !is.na(PA_DT_PROC))
 
-    cat(sprintf("Filtered to cytopathology: %d records\n", nrow(dados_cito)))
+    cat(sprintf("✅ Found %d citopatologia records\n", nrow(dados_cito)))
 
-    # Aggregate by municipality and month
-    if (nrow(dados_cito) > 0) {
-      agregado <- dados_cito %>%
-        mutate(
-          ano_mes = format(as.Date(PA_DT_PROC, format = "%d%m%Y"), "%Y-%m"),
-          municipio = PA_MUNOFN
-        ) %>%
-        group_by(municipio, ano_mes) %>%
-        summarise(exames = n(), .groups = 'drop') %>%
-        arrange(municipio, ano_mes) %>%
-        as.data.frame()
-    } else {
-      cat("WARNING: No cytopathology records found\n")
-      agregado <- data.frame(
-        municipio = character(),
-        ano_mes = character(),
-        exames = integer()
-      )
+    if (nrow(dados_cito) == 0) {
+      stop("No citopatologia records found")
     }
-  } else {
-    cat("WARNING: PA_PROC_ID not found. Using all records.\n")
-    agregado <- dados %>%
-      select(any_of(c("PA_MUNOFN", "PA_DT_PROC"))) %>%
-      filter(!is.na(PA_MUNOFN), !is.na(PA_DT_PROC)) %>%
+
+    # Parse dates flexibly
+    dados_cito <- dados_cito %>%
       mutate(
-        ano_mes = format(as.Date(PA_DT_PROC, format = "%d%m%Y"), "%Y-%m"),
-        municipio = PA_MUNOFN
+        ano_mes = tryCatch(
+          format(as.Date(as.character(PA_DT_PROC), format = "%d%m%Y"), "%Y-%m"),
+          error = function(e) {
+            tryCatch(
+              format(as.Date(as.character(PA_DT_PROC)), "%Y-%m"),
+              error = function(e) NA_character_
+            )
+          }
+        ),
+        municipio = as.character(PA_MUNOFN)
       ) %>%
+      filter(!is.na(ano_mes)) %>%
+      select(municipio, ano_mes)
+
+    # Aggregate
+    agregado <- dados_cito %>%
       group_by(municipio, ano_mes) %>%
       summarise(exames = n(), .groups = 'drop') %>%
       arrange(municipio, ano_mes) %>%
       as.data.frame()
+
+    return(agregado)
+  } else {
+    stop("PA_PROC_ID column not found in DATASUS response")
+  }
+}
+
+tryCatch({
+  agregado <- fetch_real_data()
+
+  if (nrow(agregado) == 0) {
+    stop("Aggregation resulted in empty dataset")
   }
 
-  cat(sprintf("Final aggregated records: %d\n", nrow(agregado)))
-
-  # Ensure data directory exists
+  # Save
   dir.create("data", showWarnings = FALSE)
 
-  # Save aggregated data as JSON
-  output_file <- "data/siscan_agregado.json"
-  write_json(agregado, output_file, pretty = TRUE)
-  cat(sprintf("✓ Data saved to %s\n", output_file))
+  write_json(agregado, "data/siscan_agregado.json", pretty = TRUE)
+  cat(sprintf("✓ Saved %d records\n", nrow(agregado)))
 
-  # Calculate summary
-  if (nrow(agregado) > 0) {
-    total_exames <- sum(as.numeric(agregado$exames), na.rm = TRUE)
-    total_municipios <- length(unique(agregado$municipio))
-    periodo <- sprintf("%s a %s", min(agregado$ano_mes), max(agregado$ano_mes))
-  } else {
-    total_exames <- 0
-    total_municipios <- 0
-    periodo <- "sem dados"
-  }
-
-  # Build JSON summary
-  json_str <- sprintf(
-    '{\n  "total_exames": %d,\n  "total_municipios": %d,\n  "periodo": "%s",\n  "ultima_atualizacao": "%s"\n}',
-    as.integer(total_exames),
-    as.integer(total_municipios),
-    as.character(periodo),
-    as.character(format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ"))
+  # Summary
+  summary_json <- sprintf(
+    '{\n  "total_exames": %d,\n  "total_municipios": %d,\n  "periodo": "%s a %s",\n  "ultima_atualizacao": "%s"\n}',
+    sum(agregado$exames),
+    length(unique(agregado$municipio)),
+    min(agregado$ano_mes),
+    max(agregado$ano_mes),
+    format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ")
   )
 
-  writeLines(json_str, "data/siscan_summary.json")
-  cat(sprintf("✓ Summary: %d exames, %d municípios, %s\n", total_exames, total_municipios, periodo))
+  writeLines(summary_json, "data/siscan_summary.json")
 
-  cat("\n✅ SUCCESS: Data fetch complete\n")
+  cat("\n✅ SUCCESS - REAL DATA ONLY\n")
+  cat(sprintf("   %d exames\n", sum(agregado$exames)))
+  cat(sprintf("   %d municipios\n", length(unique(agregado$municipio))))
 
 }, error = function(e) {
-  cat("❌ ERROR:", conditionMessage(e), "\n")
-  cat("Falling back to existing data...\n")
-
-  # Fallback: use existing data
-  if (file.exists("data/siscan_agregado.json")) {
-    cat("Using cached data\n")
-  } else {
-    cat("No cached data available\n")
-    quit(status = 1)
-  }
+  cat("\n❌ FATAL ERROR\n")
+  cat(sprintf("   %s\n", conditionMessage(e)))
+  cat("\nNo fallback to fake data. DATASUS must be reachable.\n")
+  quit(status = 1)
 })
