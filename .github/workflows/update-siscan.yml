@@ -21,8 +21,11 @@ jobs:
           r-version: '4.4.0'
 
       - name: Install R dependencies
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          install.packages(c('jsonlite', 'dplyr', 'tidyr', 'httr', 'xml2'))
+          install.packages(c('jsonlite', 'dplyr', 'tidyr', 'remotes'))
+          remotes::install_github('rfsaldanha/microdatasus', upgrade = 'never')
         shell: Rscript {0}
 
       - name: Fetch SISCAN data
