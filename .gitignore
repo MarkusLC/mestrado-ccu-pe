@@ -1,0 +1,33 @@
+# R
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+renv/
+.renvignore
+
+# Data (raw, large files)
+data/*.dbc
+data/*.csv
+data/*_raw.json
+
+# OS
+.DS_Store
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+
+# General
+.cache/
+tmp/

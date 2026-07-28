@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Mestrado — CCU em PE (Dados Ao Vivo)</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .header p { font-size: 14px; color: #7f8c8d; }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .status-badge.live { background: #d4edda; color: #155724; }
+        .status-badge.loading { background: #fff3cd; color: #856404; }
+        .status-badge.error { background: #f8d7da; color: #721c24; }
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 25px;
+            background: white;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: #ecf0f1;
+            color: #7f8c8d;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover { background: #d5dbdb; }
+        .tab-btn.active { background: #3498db; color: white; }
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .tab-content.active { display: block; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        .stat-box {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 14px;
+        }
+        .stat-box:last-child { border-bottom: none; }
+        .stat-label { color: #7f8c8d; font-weight: 500; }
+        .stat-value { color: #2c3e50; font-weight: bold; }
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .full-width { grid-column: 1 / -1; }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error-msg {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px;
+        }
+        .metadata {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Dashboard — Mestrado CCU em PE</h1>
+            <p>Estudo ecológico de série temporal: Previne Brasil → Saúde Brasil 360</p>
+            <div class="status-badge live" id="status">
+                <span class="spinner"></span> Carregando dados ao vivo...
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('overview')">📊 Dados SISCAN</button>
+            <button class="tab-btn" onclick="switchTab('series')">📈 Série Temporal</button>
+            <button class="tab-btn" onclick="switchTab('regions')">🗺️ Por Região</button>
+            <button class="tab-btn" onclick="switchTab('methodology')">🔬 Metodologia</button>
+        </div>
+
+        <!-- Tab: Overview -->
+        <div id="overview" class="tab-content active">
+            <div class="grid">
+                <div class="card full-width">
+                    <h2>📌 Resumo dos Dados</h2>
+                    <div class="stat-box">
+                        <span class="stat-label">Total de Exames (2018-2026)</span>
+                        <span class="stat-value" id="total-exames">—</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Municípios com Registro</span>
+                        <span class="stat-value" id="total-municipios">—</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Período Coberto</span>
+                        <span class="stat-value" id="periodo">—</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Última Atualização</span>
+                        <span class="stat-value" id="update-date">—</span>
+                    </div>
+                    <div class="metadata" id="data-source">
+                        Fonte: SISCAN (DATASUS) | Método: fetch via microdatasus R package | Atualização: GitHub Actions (15º dia de cada mês)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Série Temporal -->
+        <div id="series" class="tab-content">
+            <div class="chart-container">
+                <h2 style="margin-bottom: 20px;">📈 Série Temporal Agregada (PE)</h2>
+                <div id="timeSeriesChart" style="min-height: 400px;"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Por Região -->
+        <div id="regions" class="tab-content">
+            <div class="chart-container">
+                <h2 style="margin-bottom: 20px;">🗺️ Exames por Município (Top 15)</h2>
+                <div id="municipiosChart" style="min-height: 400px;"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Metodologia -->
+        <div id="methodology" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <h2>🔬 Delineamento</h2>
+                    <div class="stat-box">
+                        <span class="stat-label">Tipo de estudo</span>
+                        <span class="stat-value">ITS Multinível</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Unidade de análise</span>
+                        <span class="stat-value">184 municípios</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Período</span>
+                        <span class="stat-value">2018—2026</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Desfecho</span>
+                        <span class="stat-value">Contagem SISCAN</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Modelo estatístico</span>
+                        <span class="stat-value">GLMM (Binomial Negativa)</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>⏰ Marcos Temporais</h2>
+                    <div class="stat-box">
+                        <span class="stat-label">τ₁</span>
+                        <span class="stat-value">jan/2020 — Previne Brasil</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">τ₂</span>
+                        <span class="stat-value">mar/2020 — COVID-19</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">τ₃</span>
+                        <span class="stat-value">mai/2024 — SB360 (fin.)</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">τ₄</span>
+                        <span class="stat-value">mai/2025 — SB360 (C7)</span>
+                    </div>
+                </div>
+
+                <div class="card full-width">
+                    <h2>🔗 Repositório & Documentação</h2>
+                    <div class="stat-box">
+                        <span class="stat-label">GitHub</span>
+                        <span class="stat-value"><a href="https://github.com/MarkusLC/mestrado-ccu-pe" target="_blank" style="color: #3498db; text-decoration: none;">MarkusLC/mestrado-ccu-pe</a></span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Status</span>
+                        <span class="stat-value" id="repo-status">Verificando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DATA_URL = 'https://raw.githubusercontent.com/MarkusLC/mestrado-ccu-pe/main/data/siscan_agregado.json';
+        const SUMMARY_URL = 'https://raw.githubusercontent.com/MarkusLC/mestrado-ccu-pe/main/data/siscan_summary.json';
+
+        async function loadData() {
+            try {
+                const [dataResp, summaryResp] = await Promise.all([
+                    fetch(DATA_URL),
+                    fetch(SUMMARY_URL)
+                ]);
+
+                if (!dataResp.ok || !summaryResp.ok) {
+                    throw new Error('Dados ainda não disponíveis (primeira execução do GitHub Actions)');
+                }
+
+                const data = await dataResp.json();
+                const summary = await summaryResp.json();
+
+                updateDashboard(data, summary);
+                updateStatus('live', '✓ Dados ao vivo');
+            } catch (e) {
+                console.error('Error loading data:', e);
+                updateStatus('error', '✗ Erro ao carregar: ' + e.message);
+                showError(e.message);
+            }
+        }
+
+        function updateStatus(type, text) {
+            const badge = document.getElementById('status');
+            badge.className = `status-badge ${type}`;
+            badge.textContent = text;
+        }
+
+        function showError(msg) {
+            const overview = document.getElementById('overview');
+            overview.innerHTML = `<div class="error-msg"><strong>⚠️ Erro:</strong> ${msg}</div>` + overview.innerHTML;
+        }
+
+        function updateDashboard(data, summary) {
+            document.getElementById('total-exames').textContent = summary.total_exames.toLocaleString('pt-BR');
+            document.getElementById('total-municipios').textContent = summary.total_municipios;
+            document.getElementById('periodo').textContent = summary.periodo;
+            document.getElementById('update-date').textContent = new Date(summary.ultima_atualizacao).toLocaleDateString('pt-BR');
+
+            // Série temporal
+            const grouped = {};
+            data.forEach(d => {
+                if (!grouped[d.ano_mes]) grouped[d.ano_mes] = 0;
+                grouped[d.ano_mes] += d.exames;
+            });
+
+            const x = Object.keys(grouped).sort();
+            const y = x.map(k => grouped[k]);
+
+            Plotly.newPlot('timeSeriesChart', [{
+                x, y,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Exames',
+                line: { color: '#3498db', width: 2 },
+                fill: 'tozeroy'
+            }], {
+                title: 'Exames Mensais Agregados (PE)',
+                xaxis: { title: 'Mês/Ano' },
+                yaxis: { title: 'Quantidade de Exames' },
+                responsive: true
+            });
+
+            // Top municípios
+            const byMun = {};
+            data.forEach(d => {
+                if (!byMun[d.municipio]) byMun[d.municipio] = 0;
+                byMun[d.municipio] += d.exames;
+            });
+
+            const top15 = Object.entries(byMun)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 15);
+
+            Plotly.newPlot('municipiosChart', [{
+                y: top15.map(([m]) => m),
+                x: top15.map(([, count]) => count),
+                type: 'bar',
+                orientation: 'h',
+                marker: { color: '#27ae60' }
+            }], {
+                title: 'Top 15 Municípios por Total de Exames',
+                xaxis: { title: 'Total de Exames' },
+                yaxis: { title: 'Município' },
+                responsive: true
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Load data on page load
+        loadData();
+
+        // Refresh every 1 hour
+        setInterval(loadData, 3600000);
+    </script>
+</body>
+</html>
