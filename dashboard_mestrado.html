@@ -855,8 +855,9 @@
             // Série temporal
             const grouped = {};
             data.forEach(d => {
-                if (!grouped[d.ano_mes]) grouped[d.ano_mes] = 0;
-                grouped[d.ano_mes] += d.exames;
+                const ano = d.ano || d.ano_mes;  // Compatível com ambos os formatos
+                if (!grouped[ano]) grouped[ano] = 0;
+                grouped[ano] += d.exames;
             });
 
             const x = Object.keys(grouped).sort();
