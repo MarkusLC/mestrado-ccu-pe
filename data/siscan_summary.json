@@ -1,5 +1,5 @@
 {
-  "total_exames": 91276,
+  "total_exames": 157930,
   "total_municipios": 15,
   "anos": [
     "2018",
@@ -12,11 +12,12 @@
     "2025",
     "2026"
   ],
-  "periodo": "2018 a 2026",
-  "ultima_atualizacao": "2026-07-28T20:32:18.961371Z",
+  "meses_coletados": 16,
+  "periodo": "2018-01 a 2026-05",
+  "ultima_atualizacao": "2026-07-28T20:55:04.147621Z",
   "fonte": "DATASUS SIA TABNET PE",
   "estado": "PE",
   "procedimento": "0201020033 (Coleta material colo útero citopatologia)",
-  "registros": 135,
-  "nota": "1 mês por ano (janeiro). Para granularidade mensal completa, execute múltiplas querys."
+  "registros": 240,
+  "nota": "Série mensal real (não agregada)"
 }
