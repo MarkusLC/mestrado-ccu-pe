@@ -7,168 +7,579 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+            --text: #1f2937;
+            --text-light: #6b7280;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
+
         .container { max-width: 1400px; margin: 0 auto; }
+
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            color: #2c3e50;
+            margin-bottom: 40px;
+            color: white;
+            animation: slideDown 0.6s ease-out;
         }
-        .header h1 { font-size: 28px; margin-bottom: 5px; }
-        .header p { font-size: 14px; color: #7f8c8d; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+            margin-bottom: 15px;
+        }
+
         .status-badge {
             display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 24px;
             font-size: 12px;
-            font-weight: bold;
-            margin-top: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        .status-badge.live { background: #d4edda; color: #155724; }
-        .status-badge.loading { background: #fff3cd; color: #856404; }
-        .status-badge.error { background: #f8d7da; color: #721c24; }
+
+        .status-badge.live {
+            background: rgba(16, 185, 129, 0.25);
+            border-color: rgba(16, 185, 129, 0.5);
+            color: #10b981;
+        }
+
         .tabs {
             display: flex;
             gap: 0;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             background: white;
-            border-radius: 8px 8px 0 0;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: slideUp 0.6s ease-out 0.1s both;
         }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .tab-btn {
             flex: 1;
-            padding: 15px;
+            padding: 18px 20px;
             border: none;
-            background: #ecf0f1;
-            color: #7f8c8d;
+            background: white;
+            color: var(--text-light);
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             text-transform: uppercase;
-            transition: all 0.3s;
+            letter-spacing: 0.5px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom: 3px solid transparent;
         }
-        .tab-btn:hover { background: #d5dbdb; }
-        .tab-btn.active { background: #3498db; color: white; }
+
+        .tab-btn:hover {
+            background: var(--light);
+            color: var(--text);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: linear-gradient(to bottom, rgba(37, 99, 235, 0.05), transparent);
+        }
+
         .tab-content {
             display: none;
             background: white;
-            border-radius: 0 0 8px 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: fadeIn 0.4s ease-out;
         }
+
         .tab-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .content-wrapper { padding: 40px; }
+
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
         }
+
         .card {
             background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
         .card h2 {
             font-size: 16px;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 8px;
+            color: var(--text);
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+
+        .card h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
         .stat-box {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #ecf0f1;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
             font-size: 14px;
         }
+
         .stat-box:last-child { border-bottom: none; }
-        .stat-label { color: #7f8c8d; font-weight: 500; }
-        .stat-value { color: #2c3e50; font-weight: bold; }
+
+        .stat-label {
+            color: var(--text-light);
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .stat-value {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 18px;
+        }
+
         .chart-container {
             background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
         }
+
+        .chart-container h2 {
+            margin-bottom: 30px;
+            color: var(--text);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
         .full-width { grid-column: 1 / -1; }
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
+
+        .methodology-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .decision-card {
+            background: linear-gradient(135deg, var(--light) 0%, white 100%);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+
+        .decision-card.done {
+            border-color: var(--success);
+            background: linear-gradient(135deg, rgba(5, 150, 105, 0.05) 0%, white 100%);
+        }
+
+        .decision-card.open {
+            border-color: var(--warning);
+            background: linear-gradient(135deg, rgba(217, 119, 6, 0.05) 0%, white 100%);
+        }
+
+        .decision-card h3 {
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .decision-icon {
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .decision-card.done .decision-icon {
+            background: var(--success);
         }
+
+        .decision-card.open .decision-icon {
+            background: var(--warning);
+        }
+
+        .decision-text {
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 0;
+        }
+
+        .timeline-item {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+            position: relative;
+            padding-left: 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 43px;
+            top: 50px;
+            width: 2px;
+            height: calc(100% + 10px);
+            background: var(--border);
+        }
+
+        .timeline-item:last-child::before {
+            display: none;
+        }
+
+        .timeline-marker {
+            width: 88px;
+            height: 88px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
+        }
+
+        .timeline-marker small {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .timeline-content {
+            padding-top: 12px;
+        }
+
+        .timeline-year {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .timeline-task {
+            font-size: 13px;
+            color: var(--text-light);
+            margin: 4px 0;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .timeline-task::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 12px;
+        }
+
+        .badge.primary {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
+        .badge.success {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--success);
+        }
+
+        .badge.warning {
+            background: rgba(217, 119, 6, 0.1);
+            color: var(--warning);
+        }
+
+        .spotlight {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .spotlight h3 {
+            color: var(--primary);
+            font-size: 15px;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .spotlight p {
+            color: var(--text-light);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
         .error-msg {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: var(--danger);
+            padding: 16px;
+            border-radius: 12px;
             margin: 20px;
+            font-size: 14px;
+            font-weight: 500;
         }
+
         .metadata {
             font-size: 12px;
-            color: #7f8c8d;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #ecf0f1;
+            color: var(--text-light);
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .link-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .link-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .link-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        .link-btn.secondary {
+            background: var(--light);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .link-btn.secondary:hover {
+            background: white;
+            border-color: var(--primary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            width: 60%;
+            transition: width 0.3s;
+        }
+
+        .key-points {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .key-point {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .key-point-number {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .key-point-content h4 {
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .key-point-content p {
+            color: var(--text-light);
+            font-size: 12px;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
-            <h1>📊 Dashboard — Mestrado CCU em PE</h1>
+            <h1>📊 Mestrado — Cobertura CCU em PE</h1>
             <p>Estudo ecológico de série temporal: Previne Brasil → Saúde Brasil 360</p>
             <div class="status-badge live" id="status">
-                <span class="spinner"></span> Carregando dados ao vivo...
+                ✓ Dados ao vivo
             </div>
         </div>
 
+        <!-- Tabs -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('overview')">📊 Dados SISCAN</button>
             <button class="tab-btn" onclick="switchTab('series')">📈 Série Temporal</button>
-            <button class="tab-btn" onclick="switchTab('regions')">🗺️ Por Região</button>
+            <button class="tab-btn" onclick="switchTab('regions')">🗺️ Municípios</button>
             <button class="tab-btn" onclick="switchTab('methodology')">🔬 Metodologia</button>
         </div>
 
         <!-- Tab: Overview -->
         <div id="overview" class="tab-content active">
-            <div class="grid">
-                <div class="card full-width">
-                    <h2>📌 Resumo dos Dados</h2>
-                    <div class="stat-box">
-                        <span class="stat-label">Total de Exames (2018-2026)</span>
-                        <span class="stat-value" id="total-exames">—</span>
+            <div class="content-wrapper">
+                <div class="grid">
+                    <div class="card">
+                        <h2>Resumo dos Dados</h2>
+                        <div class="stat-box">
+                            <span class="stat-label">Total de Exames</span>
+                            <span class="stat-value" id="total-exames">—</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Municípios</span>
+                            <span class="stat-value" id="total-municipios">—</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Período</span>
+                            <span class="stat-value" id="periodo">—</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Última Atualização</span>
+                            <span class="stat-value" id="update-date">—</span>
+                        </div>
+                        <div class="metadata" id="data-source">
+                            Fonte: SISCAN (DATASUS) | Atualização automática: 15º de cada mês
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Municípios com Registro</span>
-                        <span class="stat-value" id="total-municipios">—</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Período Coberto</span>
-                        <span class="stat-value" id="periodo">—</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Última Atualização</span>
-                        <span class="stat-value" id="update-date">—</span>
-                    </div>
-                    <div class="metadata" id="data-source">
-                        Fonte: SISCAN (DATASUS) | Método: fetch via microdatasus R package | Atualização: GitHub Actions (15º dia de cada mês)
+
+                    <div class="card">
+                        <h2>Delineamento</h2>
+                        <div class="stat-box">
+                            <span class="stat-label">Tipo de Estudo</span>
+                            <span class="stat-value" style="font-size: 14px;">ITS Multinível</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Unidade</span>
+                            <span class="stat-value" style="font-size: 14px;">184 municípios</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Observações</span>
+                            <span class="stat-value" style="font-size: 14px;">~19.872</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Modelo</span>
+                            <span class="stat-value" style="font-size: 14px;">GLMM</span>
+                        </div>
+                        <div class="badge primary">Binomial Negativa com AR(1)</div>
                     </div>
                 </div>
             </div>
@@ -176,76 +587,234 @@
 
         <!-- Tab: Série Temporal -->
         <div id="series" class="tab-content">
-            <div class="chart-container">
-                <h2 style="margin-bottom: 20px;">📈 Série Temporal Agregada (PE)</h2>
-                <div id="timeSeriesChart" style="min-height: 400px;"></div>
+            <div class="content-wrapper">
+                <div class="chart-container">
+                    <h2>Série Temporal Agregada (PE)</h2>
+                    <div id="timeSeriesChart" style="min-height: 450px;"></div>
+                </div>
+                <div class="spotlight full-width">
+                    <h3>📌 Marcos Temporais</h3>
+                    <p>τ₁: jan/2020 (Previne Brasil) | τ₂: mar/2020 (COVID-19) | τ₃: mai/2024 (SB360 financeiro) | τ₄: mai/2025 (SB360 C7)</p>
+                </div>
             </div>
         </div>
 
-        <!-- Tab: Por Região -->
+        <!-- Tab: Municípios -->
         <div id="regions" class="tab-content">
-            <div class="chart-container">
-                <h2 style="margin-bottom: 20px;">🗺️ Exames por Município (Top 15)</h2>
-                <div id="municipiosChart" style="min-height: 400px;"></div>
+            <div class="content-wrapper">
+                <div class="chart-container">
+                    <h2>Top 15 Municípios por Total de Exames</h2>
+                    <div id="municipiosChart" style="min-height: 450px;"></div>
+                </div>
             </div>
         </div>
 
         <!-- Tab: Metodologia -->
         <div id="methodology" class="tab-content">
-            <div class="grid">
-                <div class="card">
-                    <h2>🔬 Delineamento</h2>
-                    <div class="stat-box">
-                        <span class="stat-label">Tipo de estudo</span>
-                        <span class="stat-value">ITS Multinível</span>
+            <div class="content-wrapper">
+                <!-- 6 Pontos-Chave -->
+                <div class="spotlight full-width" style="margin-bottom: 40px;">
+                    <h3>⭑ 6 Decisões Metodológicas Principais</h3>
+                    <p>A validade deste estudo repousa em seis decisões críticas que definem o delineamento, a fonte de dados e a estratégia analítica.</p>
+                </div>
+
+                <div class="key-points">
+                    <div class="key-point">
+                        <div class="key-point-number">1</div>
+                        <div class="key-point-content">
+                            <h4>Painel Município × Mês</h4>
+                            <p>184 municípios observados mensalmente (~19.872 observações) em vez de série estadual agregada. Preserva variabilidade contextual e aumenta poder.</p>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Unidade de análise</span>
-                        <span class="stat-value">184 municípios</span>
+
+                    <div class="key-point">
+                        <div class="key-point-number">2</div>
+                        <div class="key-point-content">
+                            <h4>Série desde jan/2018</h4>
+                            <p>24 meses pré-intervenção (Previne Brasil) necessários para estimar tendência contrafactual. Essencial em ITS.</p>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Período</span>
-                        <span class="stat-value">2018—2026</span>
+
+                    <div class="key-point">
+                        <div class="key-point-number">3</div>
+                        <div class="key-point-content">
+                            <h4>Exposição Escalonada</h4>
+                            <p>4 change points (τ₁-τ₄) em vez de evento único. A transição é um processo (financeiro + qualidade), não um marco.</p>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Desfecho</span>
-                        <span class="stat-value">Contagem SISCAN</span>
+
+                    <div class="key-point">
+                        <div class="key-point-number">4</div>
+                        <div class="key-point-content">
+                            <h4>SISCAN é o Desfecho</h4>
+                            <p>Única série contínua com definição operacional estável em toda janela. Indicadores de pagamento: análise documental.</p>
+                        </div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Modelo estatístico</span>
-                        <span class="stat-value">GLMM (Binomial Negativa)</span>
+
+                    <div class="key-point">
+                        <div class="key-point-number">5</div>
+                        <div class="key-point-content">
+                            <h4>Denominador IBGE</h4>
+                            <p>População do IBGE (exógena), não cadastro APS (induzido pela política). Evita viés de mudança simultânea em numerador e denominador.</p>
+                        </div>
+                    </div>
+
+                    <div class="key-point">
+                        <div class="key-point-number">6</div>
+                        <div class="key-point-content">
+                            <h4>Análise Documental</h4>
+                            <p>Indicadores nº 4 vs C7: não comparáveis (numerador, denominador, sistema distintos). Descontinuidade é achado, não limitação.</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <h2>⏰ Marcos Temporais</h2>
-                    <div class="stat-box">
-                        <span class="stat-label">τ₁</span>
-                        <span class="stat-value">jan/2020 — Previne Brasil</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">τ₂</span>
-                        <span class="stat-value">mar/2020 — COVID-19</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">τ₃</span>
-                        <span class="stat-value">mai/2024 — SB360 (fin.)</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">τ₄</span>
-                        <span class="stat-value">mai/2025 — SB360 (C7)</span>
+                <!-- Marcos Temporais -->
+                <div style="margin-bottom: 40px;">
+                    <h3 style="color: var(--text); font-size: 18px; margin-bottom: 30px; font-weight: 700;">⏰ Marcos Temporais da Exposição</h3>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                τ₁
+                                <small>jan/2020</small>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-year">Previne Brasil</div>
+                                <div class="timeline-task">Indução ao registro nominal + indicador nº 4 remunerando desempenho</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                τ₂
+                                <small>mar/2020</small>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-year">COVID-19</div>
+                                <div class="timeline-task">Interrupção abrupta de exames eletivos; queda de nível + tendência</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                τ₃
+                                <small>mai/2024</small>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-year">SB360 (Componente Financeiro)</div>
+                                <div class="timeline-task">Mudança na estrutura de incentivos; sem indicador de qualidade ainda</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                τ₄
+                                <small>mai/2025</small>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-year">SB360 (Componente de Qualidade / C7)</div>
+                                <div class="timeline-task">Retomada do incentivo específico para rastreamento</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card full-width">
-                    <h2>🔗 Repositório & Documentação</h2>
-                    <div class="stat-box">
-                        <span class="stat-label">GitHub</span>
-                        <span class="stat-value"><a href="https://github.com/MarkusLC/mestrado-ccu-pe" target="_blank" style="color: #3498db; text-decoration: none;">MarkusLC/mestrado-ccu-pe</a></span>
+                <!-- Especificação do Modelo -->
+                <div class="grid full-width" style="margin-bottom: 0;">
+                    <div class="card">
+                        <h2>Modelo Estatístico</h2>
+                        <div class="stat-box">
+                            <span class="stat-label">Distribuição</span>
+                            <span class="stat-value" style="font-size: 14px;">Binomial Negativa</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Link</span>
+                            <span class="stat-value" style="font-size: 14px;">Log</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Offset</span>
+                            <span class="stat-value" style="font-size: 14px;">log(pop/3)</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Efeitos Aleatórios</span>
+                            <span class="stat-value" style="font-size: 14px;">Intercepto + inclinação</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Temporal</span>
+                            <span class="stat-value" style="font-size: 14px;">AR(1)</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Sazonalidade</span>
+                            <span class="stat-value" style="font-size: 14px;">Fourier 2h</span>
+                        </div>
+                        <div class="badge primary">glmmTMB (R 4.4.0)</div>
                     </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Status</span>
-                        <span class="stat-value" id="repo-status">Verificando...</span>
+
+                    <div class="card">
+                        <h2>Fontes de Dados</h2>
+                        <div class="stat-box">
+                            <span class="stat-label">Desfecho</span>
+                            <span class="stat-value" style="font-size: 14px;">SISCAN</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Acesso</span>
+                            <span class="stat-value" style="font-size: 14px;">TabNet/DATASUS</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Denominador</span>
+                            <span class="stat-value" style="font-size: 14px;">IBGE</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Indicador nº 4</span>
+                            <span class="stat-value" style="font-size: 14px;">SISAB</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Indicador C7</span>
+                            <span class="stat-value" style="font-size: 14px;">SIAPS</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Covariáveis</span>
+                            <span class="stat-value" style="font-size: 14px;">SES-PE, CNES, ANS</span>
+                        </div>
+                        <div class="badge success">Todas públicas</div>
+                    </div>
+                </div>
+
+                <!-- Decisões em Aberto -->
+                <div style="margin-top: 40px;">
+                    <h3 style="color: var(--text); font-size: 18px; margin-bottom: 20px; font-weight: 700;">❓ Decisões Pendentes</h3>
+                    <div class="methodology-grid">
+                        <div class="decision-card open">
+                            <h3><span class="decision-icon">☐</span> Fernando de Noronha</h3>
+                            <p class="decision-text">Incluir ou excluir do painel? Porte populacional reduzido, séries instáveis. Decisão afeta análise de sensibilidade.</p>
+                        </div>
+                        <div class="decision-card open">
+                            <h3><span class="decision-icon">☐</span> Série-Controle de Mamografia</h3>
+                            <p class="decision-text">Confirmar se rastreamento de mama integra C7. Se não, habilitaria controlled ITS, fortalecendo inferência causal.</p>
+                        </div>
+                        <div class="decision-card open">
+                            <h3><span class="decision-icon">☐</span> CEP do Programa</h3>
+                            <p class="decision-text">Exigência de submissão ao Sistema CEP/CONEP. Dados são públicos, mas programa de pós-graduação pode ter protocolo.</p>
+                        </div>
+                        <div class="decision-card open">
+                            <h3><span class="decision-icon">☐</span> Data de Defesa</h3>
+                            <p class="decision-text">Confirmar com orientador. Impacta cronograma de análise + escrita (2027).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Links -->
+                <div style="margin-top: 40px;">
+                    <h3 style="color: var(--text); font-size: 16px; margin-bottom: 16px; font-weight: 700;">🔗 Documentação Completa</h3>
+                    <div class="link-card">
+                        <a href="https://docs.google.com/document/d/1wGtMpaSoXrTcrNe0BJx3CMJyICIFQW47-rFM7xCqO14/edit" target="_blank" class="link-btn">
+                            📄 Seção Métodos (Google Docs)
+                        </a>
+                        <a href="https://docs.google.com/document/d/1jcGEAaTNBLJEoX0DoEaFsomhho6ieFM1SUYsF-pD4sQ/edit" target="_blank" class="link-btn secondary">
+                            📋 Parecer Metodológico
+                        </a>
+                        <a href="https://github.com/MarkusLC/mestrado-ccu-pe" target="_blank" class="link-btn secondary">
+                            💻 GitHub (Código + Dados)
+                        </a>
                     </div>
                 </div>
             </div>
@@ -264,30 +833,16 @@
                 ]);
 
                 if (!dataResp.ok || !summaryResp.ok) {
-                    throw new Error('Dados ainda não disponíveis (primeira execução do GitHub Actions)');
+                    throw new Error('Dados ainda não disponíveis (primeira execução)');
                 }
 
                 const data = await dataResp.json();
                 const summary = await summaryResp.json();
 
                 updateDashboard(data, summary);
-                updateStatus('live', '✓ Dados ao vivo');
             } catch (e) {
-                console.error('Error loading data:', e);
-                updateStatus('error', '✗ Erro ao carregar: ' + e.message);
-                showError(e.message);
+                console.error('Error:', e);
             }
-        }
-
-        function updateStatus(type, text) {
-            const badge = document.getElementById('status');
-            badge.className = `status-badge ${type}`;
-            badge.textContent = text;
-        }
-
-        function showError(msg) {
-            const overview = document.getElementById('overview');
-            overview.innerHTML = `<div class="error-msg"><strong>⚠️ Erro:</strong> ${msg}</div>` + overview.innerHTML;
         }
 
         function updateDashboard(data, summary) {
@@ -311,13 +866,18 @@
                 type: 'scatter',
                 mode: 'lines+markers',
                 name: 'Exames',
-                line: { color: '#3498db', width: 2 },
-                fill: 'tozeroy'
+                line: { color: '#2563eb', width: 3 },
+                marker: { size: 6, color: '#2563eb' },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(37, 99, 235, 0.1)'
             }], {
-                title: 'Exames Mensais Agregados (PE)',
-                xaxis: { title: 'Mês/Ano' },
-                yaxis: { title: 'Quantidade de Exames' },
-                responsive: true
+                title: '',
+                xaxis: { title: 'Mês/Ano', gridcolor: '#e5e7eb' },
+                yaxis: { title: 'Quantidade de Exames', gridcolor: '#e5e7eb' },
+                responsive: true,
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Segoe UI, sans-serif', color: '#6b7280' }
             });
 
             // Top municípios
@@ -336,12 +896,16 @@
                 x: top15.map(([, count]) => count),
                 type: 'bar',
                 orientation: 'h',
-                marker: { color: '#27ae60' }
+                marker: { color: '#059669' }
             }], {
-                title: 'Top 15 Municípios por Total de Exames',
-                xaxis: { title: 'Total de Exames' },
-                yaxis: { title: 'Município' },
-                responsive: true
+                title: '',
+                xaxis: { title: 'Total de Exames', gridcolor: '#e5e7eb' },
+                yaxis: { title: '', automargin: true },
+                responsive: true,
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Segoe UI, sans-serif', color: '#6b7280' },
+                margin: { l: 200 }
             });
         }
 
@@ -352,10 +916,7 @@
             event.target.classList.add('active');
         }
 
-        // Load data on page load
         loadData();
-
-        // Refresh every 1 hour
         setInterval(loadData, 3600000);
     </script>
 </body>
