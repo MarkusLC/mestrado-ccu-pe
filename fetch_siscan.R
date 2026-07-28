@@ -15,7 +15,7 @@ tryCatch({
   # TODO: Integrate with real DATASUS API when available
   # Real integration would use: TabNet API, microdatasus, or direct DBC parsing
 
-  # Load existing data to use as base
+  # Load existing data
   if (file.exists("data/siscan_agregado.json")) {
     agregado <- fromJSON("data/siscan_agregado.json")
     cat("Loaded existing data structure\n")
@@ -33,30 +33,38 @@ tryCatch({
   # Ensure data directory exists
   dir.create("data", showWarnings = FALSE)
 
-  # Save as JSON
+  # Save aggregated data as JSON
   output_file <- "data/siscan_agregado.json"
   write_json(agregado, output_file, pretty = TRUE)
   cat(sprintf("✓ Data saved to %s\n", output_file))
 
-  # Save summary stats
-  if (nrow(agregado) > 0) {
-    summary_stats <- list(
-      total_exames = sum(as.numeric(agregado$exames), na.rm = TRUE),
-      total_municipios = length(unique(agregado$municipio)),
-      periodo = sprintf("%s a %s", min(agregado$ano_mes), max(agregado$ano_mes)),
-      ultima_atualizacao = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ")
-    )
+  # Recalculate summary from aggregated data
+  if (nrow(agregado) > 0 && is.data.frame(agregado)) {
+    total_exames <- sum(as.numeric(agregado$exames), na.rm = TRUE)
+    total_municipios <- length(unique(agregado$municipio))
+    periodo <- sprintf("%s a %s", min(agregado$ano_mes), max(agregado$ano_mes))
+  } else if (is.list(agregado) && length(agregado) > 0) {
+    # If it's a list instead of data.frame
+    exames_vec <- sapply(agregado, function(x) as.numeric(x$exames))
+    municipios_vec <- sapply(agregado, function(x) x$municipio)
+    total_exames <- sum(exames_vec, na.rm = TRUE)
+    total_municipios <- length(unique(municipios_vec))
+    periodo <- sprintf("%s a %s", min(sapply(agregado, function(x) x$ano_mes)), max(sapply(agregado, function(x) x$ano_mes)))
   } else {
-    summary_stats <- list(
-      total_exames = 0,
-      total_municipios = 0,
-      periodo = "sem dados",
-      ultima_atualizacao = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ")
-    )
+    total_exames <- 0
+    total_municipios <- 0
+    periodo <- "sem dados"
   }
 
+  summary_stats <- list(
+    total_exames = total_exames,
+    total_municipios = total_municipios,
+    periodo = periodo,
+    ultima_atualizacao = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ")
+  )
+
   write_json(summary_stats, "data/siscan_summary.json", pretty = TRUE)
-  cat("✓ Summary stats saved\n")
+  cat(sprintf("✓ Summary: %d exames, %d municípios, %s\n", total_exames, total_municipios, periodo))
 
   cat("\nSUCCESS: Data processed\n")
 
