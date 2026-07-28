@@ -19,7 +19,7 @@ jobs:
 
       - name: Install R dependencies
         run: |
-          install.packages(c('renv', 'jsonlite', 'dplyr', 'tidyr'))
+          install.packages(c('remotes', 'renv', 'jsonlite', 'dplyr', 'tidyr'))
           remotes::install_github('rfsaldanha/microdatasus')
         shell: Rscript {0}
 
