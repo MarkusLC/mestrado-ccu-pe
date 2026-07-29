@@ -865,20 +865,20 @@
             document.getElementById('periodo').textContent = summary.periodo;
             document.getElementById('update-date').textContent = new Date(summary.ultima_atualizacao).toLocaleDateString('pt-BR');
 
-            // Delineamento dinâmico
-            const anos = [...new Set(data.map(d => d.ano))];
-            const meses_unicos = [...new Set(data.map(d => d.ano_mes))];
-            const municipios_unicos = [...new Set(data.map(d => d.municipio))];
+            // Calcular dimensões
+            const anos = [...new Set(data.map(d => d.ano))].sort();
+            const meses_unicos = [...new Set(data.map(d => d.ano_mes))].sort();
+            const municipios_unicos = [...new Set(data.map(d => d.municipio))].sort();
             const observacoes = municipios_unicos.length * meses_unicos.length;
 
+            // Delineamento dinâmico
             document.getElementById('design-unidade').textContent =
                 `${municipios_unicos.length} municípios`;
             document.getElementById('design-obs').textContent =
                 `${observacoes.toLocaleString('pt-BR')} (${anos.length} anos × ${meses_unicos.length} meses)`;
 
             // Popular selects
-            const municipios = [...new Set(data.map(d => d.municipio))].sort();
-            const anos = [...new Set(data.map(d => d.ano))].sort();
+            const municipios = municipios_unicos;
 
             const munSelect = document.getElementById('municipioSelect');
             municipios.forEach(m => {
