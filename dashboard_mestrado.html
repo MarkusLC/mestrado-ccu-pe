@@ -570,11 +570,11 @@
                         </div>
                         <div class="stat-box">
                             <span class="stat-label">Unidade</span>
-                            <span class="stat-value" style="font-size: 14px;">184 municípios</span>
+                            <span class="stat-value" id="design-unidade" style="font-size: 14px;">—</span>
                         </div>
                         <div class="stat-box">
                             <span class="stat-label">Observações</span>
-                            <span class="stat-value" style="font-size: 14px;">~19.872</span>
+                            <span class="stat-value" id="design-obs" style="font-size: 14px;">—</span>
                         </div>
                         <div class="stat-box">
                             <span class="stat-label">Modelo</span>
@@ -859,10 +859,22 @@
         }
 
         function updateDashboard(data, summary) {
+            // Resumo dos dados
             document.getElementById('total-exames').textContent = summary.total_exames.toLocaleString('pt-BR');
             document.getElementById('total-municipios').textContent = summary.total_municipios;
             document.getElementById('periodo').textContent = summary.periodo;
             document.getElementById('update-date').textContent = new Date(summary.ultima_atualizacao).toLocaleDateString('pt-BR');
+
+            // Delineamento dinâmico
+            const anos = [...new Set(data.map(d => d.ano))];
+            const meses_unicos = [...new Set(data.map(d => d.ano_mes))];
+            const municipios_unicos = [...new Set(data.map(d => d.municipio))];
+            const observacoes = municipios_unicos.length * meses_unicos.length;
+
+            document.getElementById('design-unidade').textContent =
+                `${municipios_unicos.length} municípios`;
+            document.getElementById('design-obs').textContent =
+                `${observacoes.toLocaleString('pt-BR')} (${anos.length} anos × ${meses_unicos.length} meses)`;
 
             // Popular selects
             const municipios = [...new Set(data.map(d => d.municipio))].sort();
