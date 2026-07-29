@@ -589,8 +589,14 @@
         <!-- Tab: Série Temporal -->
         <div id="series" class="tab-content">
             <div class="content-wrapper">
+                <div style="margin-bottom: 20px; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+                    <label for="municipioSelect" style="font-weight: 600; margin-right: 10px;">Filtrar por Município:</label>
+                    <select id="municipioSelect" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 14px; min-width: 250px;">
+                        <option value="">Todos os municípios (agregado)</option>
+                    </select>
+                </div>
                 <div class="chart-container">
-                    <h2>Série Temporal Agregada (PE)</h2>
+                    <h2>Série Temporal - Exames Citopatológicos Cervicais</h2>
                     <div id="timeSeriesChart" style="min-height: 450px;"></div>
                 </div>
                 <div class="spotlight full-width">
@@ -603,8 +609,14 @@
         <!-- Tab: Municípios -->
         <div id="regions" class="tab-content">
             <div class="content-wrapper">
+                <div style="margin-bottom: 20px; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+                    <label for="anoSelect" style="font-weight: 600; margin-right: 10px;">Filtrar por Período:</label>
+                    <select id="anoSelect" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #d1d5db; font-size: 14px; min-width: 250px;">
+                        <option value="">Todos os períodos</option>
+                    </select>
+                </div>
                 <div class="chart-container">
-                    <h2>Top 15 Municípios por Total de Exames</h2>
+                    <h2>Municípios - Total de Exames</h2>
                     <div id="municipiosChart" style="min-height: 450px;"></div>
                 </div>
             </div>
@@ -852,63 +864,107 @@
             document.getElementById('periodo').textContent = summary.periodo;
             document.getElementById('update-date').textContent = new Date(summary.ultima_atualizacao).toLocaleDateString('pt-BR');
 
-            // Série temporal
-            const grouped = {};
-            data.forEach(d => {
-                const ano = d.ano || d.ano_mes;  // Compatível com ambos os formatos
-                if (!grouped[ano]) grouped[ano] = 0;
-                grouped[ano] += d.exames;
+            // Popular selects
+            const municipios = [...new Set(data.map(d => d.municipio))].sort();
+            const anos = [...new Set(data.map(d => d.ano))].sort();
+
+            const munSelect = document.getElementById('municipioSelect');
+            municipios.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                munSelect.appendChild(opt);
             });
 
-            const x = Object.keys(grouped).sort();
-            const y = x.map(k => grouped[k]);
-
-            Plotly.newPlot('timeSeriesChart', [{
-                x, y,
-                type: 'scatter',
-                mode: 'lines+markers',
-                name: 'Exames',
-                line: { color: '#2563eb', width: 3 },
-                marker: { size: 6, color: '#2563eb' },
-                fill: 'tozeroy',
-                fillcolor: 'rgba(37, 99, 235, 0.1)'
-            }], {
-                title: '',
-                xaxis: { title: 'Mês/Ano', gridcolor: '#e5e7eb' },
-                yaxis: { title: 'Quantidade de Exames', gridcolor: '#e5e7eb' },
-                responsive: true,
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                font: { family: 'Segoe UI, sans-serif', color: '#6b7280' }
+            const anoSelect = document.getElementById('anoSelect');
+            anos.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a;
+                opt.textContent = a;
+                anoSelect.appendChild(opt);
             });
 
-            // Top municípios
-            const byMun = {};
-            data.forEach(d => {
-                if (!byMun[d.municipio]) byMun[d.municipio] = 0;
-                byMun[d.municipio] += d.exames;
-            });
+            // Função: atualizar série temporal
+            function updateTimeSeries() {
+                const selectedMun = munSelect.value;
+                let filtered = data;
+                if (selectedMun) {
+                    filtered = data.filter(d => d.municipio === selectedMun);
+                }
 
-            const top15 = Object.entries(byMun)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 15);
+                const grouped = {};
+                filtered.forEach(d => {
+                    const ano = d.ano || d.ano_mes;
+                    if (!grouped[ano]) grouped[ano] = 0;
+                    grouped[ano] += d.exames;
+                });
 
-            Plotly.newPlot('municipiosChart', [{
-                y: top15.map(([m]) => m),
-                x: top15.map(([, count]) => count),
-                type: 'bar',
-                orientation: 'h',
-                marker: { color: '#059669' }
-            }], {
-                title: '',
-                xaxis: { title: 'Total de Exames', gridcolor: '#e5e7eb' },
-                yaxis: { title: '', automargin: true },
-                responsive: true,
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                font: { family: 'Segoe UI, sans-serif', color: '#6b7280' },
-                margin: { l: 200 }
-            });
+                const x = Object.keys(grouped).sort();
+                const y = x.map(k => grouped[k]);
+
+                Plotly.newPlot('timeSeriesChart', [{
+                    x, y,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'Exames',
+                    line: { color: selectedMun ? '#059669' : '#2563eb', width: 3 },
+                    marker: { size: 6, color: selectedMun ? '#059669' : '#2563eb' },
+                    fill: 'tozeroy',
+                    fillcolor: selectedMun ? 'rgba(5, 150, 105, 0.1)' : 'rgba(37, 99, 235, 0.1)'
+                }], {
+                    title: selectedMun ? `${selectedMun}` : 'Pernambuco (agregado)',
+                    xaxis: { title: 'Ano', gridcolor: '#e5e7eb' },
+                    yaxis: { title: 'Quantidade de Exames', gridcolor: '#e5e7eb' },
+                    responsive: true,
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    font: { family: 'Segoe UI, sans-serif', color: '#6b7280' }
+                });
+            }
+
+            // Função: atualizar municípios
+            function updateMunicipios() {
+                const selectedAno = anoSelect.value;
+                let filtered = data;
+                if (selectedAno) {
+                    filtered = data.filter(d => d.ano === selectedAno);
+                }
+
+                const byMun = {};
+                filtered.forEach(d => {
+                    if (!byMun[d.municipio]) byMun[d.municipio] = 0;
+                    byMun[d.municipio] += d.exames;
+                });
+
+                const top15 = Object.entries(byMun)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 15);
+
+                Plotly.newPlot('municipiosChart', [{
+                    y: top15.map(([m]) => m),
+                    x: top15.map(([, count]) => count),
+                    type: 'bar',
+                    orientation: 'h',
+                    marker: { color: '#059669' }
+                }], {
+                    title: selectedAno ? `Ano ${selectedAno}` : 'Todos os períodos',
+                    xaxis: { title: 'Total de Exames', gridcolor: '#e5e7eb' },
+                    yaxis: { title: '', automargin: true },
+                    responsive: true,
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    font: { family: 'Segoe UI, sans-serif', color: '#6b7280' },
+                    margin: { l: 200 }
+                });
+            }
+
+            // Event listeners
+            munSelect.addEventListener('change', updateTimeSeries);
+            anoSelect.addEventListener('change', updateMunicipios);
+
+            // Render inicial
+            updateTimeSeries();
+            updateMunicipios();
         }
 
         function switchTab(tabName) {
