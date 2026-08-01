@@ -1,3 +1,18 @@
+# Dados brutos do DATASUS e do IBGE — cache reproduzível, ~240 MB.
+# Regenerar com `python3 pipeline.py`.
+data/bruto/
+
+# Derivados grandes: o painel é reproduzível a partir dos brutos. O que vai
+# versionado é o agregado que alimenta o dashboard (data/dashboard.json).
+data/painel_ccu_pe.csv
+data/painel_ccu_pe.json
+
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+
 # R
 .Rhistory
 .RData
@@ -6,28 +21,15 @@
 renv/
 .renvignore
 
-# Data (raw, large files)
-data/*.dbc
-data/*.csv
-data/*_raw.json
-
-# OS
+# OS e editores
 .DS_Store
 .env
 .env.local
-
-# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Python
-__pycache__/
-*.pyc
-venv/
-env/
-
-# General
+# Geral
 .cache/
 tmp/
