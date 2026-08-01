@@ -101,6 +101,39 @@ definição, mas porque a estratificação por faixa etária — que é constitu
 inutilizável. Filtrar 25–64 no SIA descartaria 91% da produção sem que se saiba o que se está
 descartando.
 
+### O argumento mais forte, que não é este
+
+A sondagem de fontes concluída em 01/08/2026 (ver `docs/fontes/PLANO_AQUISICAO.md`) chegou à mesma
+recomendação por uma razão melhor, e é ela que deve ir para a defesa.
+
+O SIA mede **faturamento de produção ambulatorial**; o SISCAN é o **registro do laudo
+citopatológico**. Não são o mesmo universo, e a diferença foi medida: o SIA capta 78% do volume do
+SISCAN em jan/2018, 86% em jan/2025 e 84% em mai/2026, na mesma UF, faixa e competência. Essa
+diferença não é ruído aleatório — é função de contratualização, glosa e regra de pagamento.
+
+Três dos marcos temporais do estudo são intervenções **financeiras**: τ1, τ3 e τ4. Usar uma série de
+faturamento para medir o efeito de mudanças no financiamento cria confundimento diferencial
+perfeitamente alinhado às datas de interrupção. Um degrau no SIA em maio de 2024 seria
+indistinguível entre "mais mulheres foram rastreadas" e "os municípios passaram a faturar melhor
+porque agora aquilo vale dinheiro". Nenhuma especificação de modelo resolve isso — é problema de
+fonte, não de estimador.
+
+O achado do campo etário corrompido continua válido e é útil como confirmação independente. Mas o
+argumento que sustenta a escolha em banca é o de validade: **não se mede efeito de política de
+financiamento com dado de faturamento.**
+
+### O que o SIA ainda serve para fazer
+
+Validação cruzada de ordem de grandeza, sem estratificação etária. A razão SIA/SISCAN por
+competência é, ela própria, uma medida útil: se ela saltar numa data de interrupção, isso é
+evidência de mudança de comportamento de faturamento — exatamente o confundimento que se quis
+evitar, agora observável em vez de escondido.
+
+Duas limitações do SIA registradas na verificação e que importam para esse uso: não há
+identificador de paciente em nenhuma das colunas, então o SIA conta exames e nunca mulheres; e o
+faturamento retroativo varia entre 4,2% e 11,4% conforme a competência, o que desloca a série de
+modo não uniforme.
+
 Isso reforça empiricamente o Ponto-Chave 4 da metodologia (SISCAN como único desfecho inferencial),
 por uma razão que o parecer metodológico não previa. O parecer justificava a escolha do SISCAN pela
 estabilidade da definição operacional ao longo da janela; acrescenta-se agora que o SIA sequer

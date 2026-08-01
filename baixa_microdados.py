@@ -18,55 +18,130 @@ Uso:
     python3 baixa_microdados.py --status        # o que já foi baixado
 """
 
-import os
+import ftplib
+import json
 import sys
 import time
-import urllib.request
 from pathlib import Path
 
-BASE = "ftp://ftp.datasus.gov.br/dissemin/publicos/SISCAN/SISCAN"
+HOST = "ftp.datasus.gov.br"
+DIR = "/dissemin/publicos/SISCAN/SISCAN"
 DESTINO = Path(__file__).parent / "data" / "microdados"
 ANOS = range(2018, 2027)
 UF_PE = b'"26"'
 CAMPO_UF = 2  # CO_UF_RESIDENCIA é o 3º campo (índice 2)
 
+# O FTP do DATASUS derruba conexões longas — um arquivo de 1,7 GB a 200 KB/s
+# leva mais de duas horas e não sobrevive inteiro. A retomada por REST é o que
+# torna o download viável; sem ela nenhum ano completa.
+TENTATIVAS = 40
+ESPERA = 20
+
 
 def baixa_ano(ano, base_nome="SISCAN_CITO_COLO"):
-    """Baixa um ano e grava só as linhas de PE. Idempotente e retomável."""
+    """Baixa um ano e grava só as linhas de PE. Idempotente e retomável.
+
+    Retoma de onde parou usando REST do FTP. O estado (offset de bytes na
+    origem) fica num sidecar .estado, para que uma interrupção no meio não
+    obrigue a recomeçar do zero.
+    """
     saida = DESTINO / f"{base_nome}_{ano}_PE.csv"
     parcial = saida.with_suffix(".parcial")
+    estado_f = saida.with_suffix(".estado")
 
     if saida.exists():
-        return "já existe", saida.stat().st_size
+        with open(saida, "rb") as fh:
+            return f"já existe, {sum(1 for _ in fh) - 1:,} linhas", saida.stat().st_size
 
-    url = f"{BASE}/{base_nome}_{ano}.csv"
-    linhas_pe = lidas = 0
+    nome = f"{base_nome}_{ano}.csv"
+    est = json.loads(estado_f.read_text()) if estado_f.exists() else {"offset": 0, "pe": 0}
+    offset, linhas_pe = est["offset"], est["pe"]
     t0 = time.monotonic()
 
+    # Tamanho na origem, para conferir no final. O FTP do DATASUS encerra a
+    # transferência limpa quando trunca: o cliente vê fim de arquivo e sai com
+    # sucesso, deixando um CSV bem-formado com uma fração dos dados. Sem esta
+    # conferência o truncamento passa silencioso — foi assim que uma sondagem
+    # anterior concluiu coisas erradas a partir de um sexto dos registros.
     try:
-        with urllib.request.urlopen(url, timeout=120) as fonte, \
-             open(parcial, "wb") as fh:
-            cabecalho = fonte.readline()
-            fh.write(cabecalho)
-            for linha in fonte:
-                lidas += 1
-                # split posicional: o 3º campo é a UF de residência, e o valor
-                # vem entre aspas. Evita instanciar um parser de CSV por linha.
-                partes = linha.split(b";", CAMPO_UF + 2)
-                if len(partes) > CAMPO_UF and partes[CAMPO_UF] == UF_PE:
-                    fh.write(linha)
-                    linhas_pe += 1
-                if lidas % 2_000_000 == 0:
-                    mb = fh.tell() / 1e6
-                    print(f"    {lidas / 1e6:.0f}M linhas lidas, "
-                          f"{linhas_pe:,} de PE ({mb:.0f} MB)", flush=True)
+        ftp_meta = ftplib.FTP(HOST, timeout=60)
+        ftp_meta.login()
+        ftp_meta.cwd(DIR)
+        ftp_meta.voidcmd("TYPE I")
+        tamanho_origem = ftp_meta.size(nome)
+        ftp_meta.quit()
     except Exception as e:
-        parcial.unlink(missing_ok=True)
-        return f"falhou: {type(e).__name__}: {e}", 0
+        return f"não consegui o tamanho na origem: {type(e).__name__}: {e}", 0
 
-    parcial.rename(saida)
-    dt = time.monotonic() - t0
-    return f"{linhas_pe:,} linhas de PE em {dt / 60:.1f} min", saida.stat().st_size
+    for tentativa in range(1, TENTATIVAS + 1):
+        buffer = bytearray()
+        fh = open(parcial, "ab" if offset else "wb")
+        try:
+            ftp = ftplib.FTP(HOST, timeout=90)
+            ftp.login()
+            ftp.cwd(DIR)
+            ftp.voidcmd("TYPE I")
+            if offset == 0:
+                print(f"    {tamanho_origem / 1e9:.2f} GB na origem", flush=True)
+
+            primeira = offset == 0
+
+            def consome(bloco):
+                nonlocal offset, linhas_pe, primeira
+                offset += len(bloco)
+                buffer.extend(bloco)
+                # processa só linhas completas; o resto fica no buffer para o
+                # próximo bloco — é isso que permite cortar em qualquer byte
+                if b"\n" not in bloco:
+                    return
+                *linhas, resto = buffer.split(b"\n")
+                del buffer[:]
+                buffer.extend(resto)
+                for linha in linhas:
+                    if not linha:
+                        continue
+                    if primeira:  # a primeira linha do arquivo é o cabeçalho
+                        fh.write(linha + b"\n")
+                        primeira = False
+                        continue
+                    partes = linha.split(b";", CAMPO_UF + 2)
+                    if len(partes) > CAMPO_UF and partes[CAMPO_UF] == UF_PE:
+                        fh.write(linha + b"\n")
+                        linhas_pe += 1
+
+            ftp.retrbinary(f"RETR {nome}", consome, blocksize=1 << 16, rest=offset)
+            ftp.quit()
+            # o que sobrou no buffer é a última linha, sem quebra final
+            if buffer:
+                partes = bytes(buffer).split(b";", CAMPO_UF + 2)
+                if len(partes) > CAMPO_UF and partes[CAMPO_UF] == UF_PE:
+                    fh.write(bytes(buffer) + b"\n")
+                    linhas_pe += 1
+            fh.close()
+
+            # a conferência que impede o truncamento silencioso
+            if offset < tamanho_origem:
+                falta = tamanho_origem - offset
+                estado_f.write_text(json.dumps({"offset": offset, "pe": linhas_pe}))
+                raise IOError(
+                    f"transferência encerrou cedo: {offset:,} de {tamanho_origem:,} bytes "
+                    f"({100 * offset / tamanho_origem:.1f}%), faltam {falta / 1e6:.0f} MB"
+                )
+
+            parcial.rename(saida)
+            estado_f.unlink(missing_ok=True)
+            dt = time.monotonic() - t0
+            return (f"{linhas_pe:,} linhas de PE em {dt / 60:.1f} min "
+                    f"({offset:,} bytes, íntegro)"), saida.stat().st_size
+
+        except Exception as e:
+            fh.close()
+            estado_f.write_text(json.dumps({"offset": offset, "pe": linhas_pe}))
+            if tentativa == TENTATIVAS:
+                return f"falhou após {TENTATIVAS} tentativas: {type(e).__name__}: {e}", 0
+            print(f"    [{tentativa}/{TENTATIVAS}] {type(e).__name__} em "
+                  f"{offset / 1e9:.2f} GB, {linhas_pe:,} de PE — retomando", flush=True)
+            time.sleep(ESPERA)
 
 
 def status():
