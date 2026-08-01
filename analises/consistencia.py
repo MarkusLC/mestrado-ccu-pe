@@ -106,9 +106,11 @@ print("\n6. DENOMINADOR")
 por_mun_ano = defaultdict(int)
 for (c, ano, fx), v in pop.items():
     por_mun_ano[(c, ano)] += v
+# `pop` é indexado por (município, ano, faixa) e portanto já traz um valor por
+# faixa, não um por competência — somar as oito faixas dá a população 25-64 do
+# município no ano. Dividir por 12 aqui, como uma versão anterior fazia,
+# produzia 225.805 mulheres em todo o estado e um alarme falso de denominador.
 p2025 = {c: v for (c, ano), v in por_mun_ano.items() if ano == '2025'}
-# cada valor foi somado 12 vezes (uma por competência do ano)
-p2025 = {c: v // 12 for c, v in p2025.items()}
 tot = sum(p2025.values())
 print(f"   mulheres 25-64 em PE (2025): {tot:,}")
 print(f"   menor município: {min(p2025.values()):,} · maior: {max(p2025.values()):,}")
