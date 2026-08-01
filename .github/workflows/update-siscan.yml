@@ -1,52 +1,56 @@
-name: Process SISCAN Data
+name: Atualizar dados do SISCAN
 
+# O SISCAN publica com defasagem de semanas e admite lançamento retroativo, então
+# uma execução mensal basta. Roda no dia 15 para pegar a competência anterior já
+# consolidada.
 on:
   schedule:
-    - cron: '0 12 15 * *'  # Dia 15 às 12h UTC
+    - cron: '0 12 15 * *'
   workflow_dispatch:
   push:
     paths:
-      - 'data/siscan_*.csv'
+      - 'pipeline.py'
 
 permissions:
   contents: write
 
 jobs:
-  process-siscan:
+  atualizar:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
-      - name: Install dependencies
-        run: |
-          pip install pandas -q
+      - name: Instalar dependências
+        run: pip install --quiet dbfread
 
-      - name: Process TABNET CSV if available
-        continue-on-error: true
-        run: |
-          python3 fetch_tabnet_process.py
+      - name: Cache dos dados brutos
+        uses: actions/cache@v4
+        with:
+          path: data/bruto
+          key: siscan-bruto-v1
+          restore-keys: siscan-bruto-
 
-      - name: Show current data status
-        run: |
-          echo "📊 Current SISCAN data files:"
-          ls -lh data/siscan_*.json 2>/dev/null || echo "   (No processed data yet)"
-          echo ""
-          echo "ℹ️  To update with real data:"
-          echo "   1. Download CSV from TABNET: https://tabnet.saude.pe.gov.br/"
-          echo "   2. Save as: data/siscan_manual.csv"
-          echo "   3. Push to repo → GitHub Actions processes automatically"
+      - name: Self-check
+        run: python3 pipeline.py --check
 
-      - name: Commit if data changed
+      - name: Coletar e montar o painel
+        run: python3 pipeline.py
+
+      - name: Commitar se os dados mudaram
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add data/siscan_*.json
-          git diff --quiet && git diff --staged --quiet || (
-            git commit -m "chore: update SISCAN data ($(date -u '+%Y-%m-%d'))" && git push
-          )
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/dashboard.json data/resumo.json data/populacao_pe.json
+          if git diff --staged --quiet; then
+            echo "Sem mudanças nos dados."
+          else
+            ULTIMA=$(python3 -c "import json;print(json.load(open('data/resumo.json'))['ultima_competencia'])")
+            git commit -m "chore: atualizar dados do SISCAN (até ${ULTIMA})"
+            git push
+          fi

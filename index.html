@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rastreamento do câncer do colo do útero em Pernambuco</title>
+<meta name="description" content="Painel de dados do estudo ecológico de séries temporais interrompidas sobre a cobertura de exames citopatológicos nos municípios de Pernambuco, 2018–2026.">
+<style>
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --plane: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --seq-100: #cde2fb;
+  --seq-250: #86b6ef;
+  --seq-450: #2a78d6;
+  --seq-650: #104281;
+  --critical: #d03b3b;
+  --warning: #fab219;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --plane: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --seq-100: #104281;
+    --seq-250: #184f95;
+    --seq-450: #3987e5;
+    --seq-650: #9ec5f4;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --plane: #0d0d0d;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255,255,255,0.10);
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --seq-100: #104281;
+  --seq-250: #184f95;
+  --seq-450: #3987e5;
+  --seq-650: #9ec5f4;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--plane);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.55;
+  font-size: 15px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 40px 24px 80px; }
+
+header { margin-bottom: 36px; }
+h1 { font-size: 28px; line-height: 1.25; margin: 0 0 10px; font-weight: 650; letter-spacing: -0.01em; }
+.sub { color: var(--text-secondary); max-width: 68ch; margin: 0 0 14px; }
+.tag {
+  display: inline-block; font-size: 12px; padding: 3px 9px; border-radius: 4px;
+  background: var(--surface-1); border: 1px solid var(--border); color: var(--text-secondary);
+  margin-right: 6px;
+}
+
+section { margin-bottom: 44px; }
+h2 { font-size: 19px; margin: 0 0 6px; font-weight: 620; letter-spacing: -0.01em; }
+h3 { font-size: 15px; margin: 0 0 4px; font-weight: 600; }
+.note { color: var(--text-secondary); font-size: 13.5px; margin: 0 0 18px; max-width: 76ch; }
+
+.card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 10px; padding: 20px 22px;
+}
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 14px; }
+.kpi { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+.kpi .label { font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+.kpi .value { font-size: 28px; font-weight: 640; letter-spacing: -0.02em; line-height: 1.1; }
+.kpi .foot { font-size: 12.5px; color: var(--text-secondary); margin-top: 5px; }
+
+.hero { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+.hero .fig { font-size: 56px; font-weight: 660; letter-spacing: -0.03em; line-height: 1; }
+.hero .unit { font-size: 15px; color: var(--text-secondary); max-width: 46ch; }
+
+figure { margin: 0; }
+figcaption { font-size: 13px; color: var(--text-secondary); margin-top: 12px; max-width: 80ch; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+.scroll { overflow-x: auto; }
+
+.axis-label, .tick { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.gridline { stroke: var(--grid); stroke-width: 1; }
+.baseline { stroke: var(--axis); stroke-width: 1; }
+.marco-line { stroke: var(--axis); stroke-width: 1; stroke-dasharray: 3 3; }
+.marco-tag { font-size: 10.5px; font-weight: 600; fill: var(--text-secondary); }
+.serie-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.gap-line { stroke-dasharray: 2 3; opacity: .5; }
+.dot { r: 3; }
+
+.legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 0 0 14px; font-size: 13px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; color: var(--text-secondary); }
+.swatch { width: 11px; height: 11px; border-radius: 2.5px; flex: none; }
+
+.tip {
+  position: fixed; pointer-events: none; z-index: 20; opacity: 0; transition: opacity .1s;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+  padding: 9px 12px; font-size: 12.5px; box-shadow: 0 6px 20px rgba(0,0,0,.14);
+  font-variant-numeric: tabular-nums; max-width: 260px;
+}
+.tip .t-h { font-weight: 620; margin-bottom: 5px; }
+.tip .t-r { display: flex; justify-content: space-between; gap: 16px; color: var(--text-secondary); }
+.tip .t-r b { color: var(--text-primary); font-weight: 600; }
+
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+th { font-weight: 600; color: var(--text-secondary); font-size: 12.5px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+caption { text-align: left; font-size: 13px; color: var(--text-secondary); padding-bottom: 10px; }
+
+details { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+summary { cursor: pointer; font-size: 13.5px; color: var(--text-secondary); font-weight: 550; }
+details[open] summary { margin-bottom: 12px; }
+
+.alerta {
+  border-left: 3px solid var(--warning); padding: 12px 16px; background: var(--surface-1);
+  border-radius: 0 8px 8px 0; font-size: 13.5px; margin: 16px 0; color: var(--text-secondary);
+}
+.alerta b { color: var(--text-primary); }
+
+.fontes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.fonte { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+.fonte h3 { margin-bottom: 3px; }
+.fonte .papel { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 8px; }
+.fonte p { margin: 0 0 8px; font-size: 13px; color: var(--text-secondary); }
+.fonte code {
+  display: block; font-size: 11.5px; background: var(--plane); padding: 7px 9px;
+  border-radius: 5px; overflow-x: auto; white-space: pre; color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+a { color: var(--s1); }
+footer { border-top: 1px solid var(--border); padding-top: 20px; font-size: 13px; color: var(--text-secondary); }
+.err { padding: 40px; text-align: center; color: var(--text-secondary); }
+@media (max-width: 640px) {
+  h1 { font-size: 23px; }
+  .hero .fig { font-size: 42px; }
+  .wrap { padding: 28px 16px 60px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="err">Carregando dados…</div></div>
+<div class="tip" id="tip"></div>
+
+<script>
+const DATA_URL = 'data/dashboard.json';
+const FALLBACK = 'https://raw.githubusercontent.com/MarkusLC/mestrado-ccu-pe/main/data/dashboard.json';
+
+const fmt = n => n == null ? '—' : n.toLocaleString('pt-BR');
+const fmt2 = n => n == null ? '—' : n.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const fmt3 = n => n == null ? '—' : n.toLocaleString('pt-BR', {minimumFractionDigits: 3, maximumFractionDigits: 3});
+const MES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const rotuloMes = m => { const [a, mm] = m.split('-'); return MES_ABREV[+mm - 1] + '/' + a; };
+
+const tip = document.getElementById('tip');
+function mostraTip(ev, html) {
+  tip.innerHTML = html;
+  tip.style.opacity = '1';
+  const r = tip.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY - r.height - 10;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y < 8) y = ev.clientY + 18;
+  tip.style.left = x + 'px';
+  tip.style.top = y + 'px';
+}
+const escondeTip = () => { tip.style.opacity = '0'; };
+
+const svgEl = (t, a = {}) => {
+  const e = document.createElementNS('http://www.w3.org/2000/svg', t);
+  for (const k in a) e.setAttribute(k, a[k]);
+  return e;
+};
+
+/* Série temporal mensal com os marcos normativos.
+   Uma série é o assunto: sem legenda, o título nomeia. Os marcos entram como
+   anotação vertical, não como segunda escala — nunca dois eixos y. */
+function serieTemporal(d) {
+  const W = 1040, H = 380, ml = 52, mr = 16, mt = 34, mb = 46;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const meses = d.meses, vals = d.series.citopatologico;
+  const invalidas = new Set(d.competencias_invalidas);
+
+  const max = Math.max(...vals) * 1.08;
+  const x = i => ml + (i / (meses.length - 1)) * iw;
+  const y = v => mt + ih - (v / max) * ih;
+
+  const svg = svgEl('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img',
+    'aria-label': 'Série mensal de exames citopatológicos em mulheres de 25 a 64 anos, Pernambuco, 2018 a 2026'});
+
+  // grade horizontal recessiva
+  const passo = max > 30000 ? 10000 : 5000;
+  for (let v = 0; v <= max; v += passo) {
+    svg.appendChild(svgEl('line', {x1: ml, x2: ml + iw, y1: y(v), y2: y(v), class: 'gridline'}));
+    const t = svgEl('text', {x: ml - 9, y: y(v) + 4, class: 'tick', 'text-anchor': 'end'});
+    t.textContent = (v / 1000) + 'k';
+    svg.appendChild(t);
+  }
+
+  // marcos normativos
+  d.marcos.forEach(mk => {
+    const i = meses.indexOf(mk.mes);
+    if (i < 0) return;
+    svg.appendChild(svgEl('line', {x1: x(i), x2: x(i), y1: mt - 8, y2: mt + ih, class: 'marco-line'}));
+    const t = svgEl('text', {x: x(i), y: mt - 13, class: 'marco-tag', 'text-anchor': 'middle'});
+    t.textContent = mk.id;
+    svg.appendChild(t);
+  });
+
+  // a série, quebrada onde a competência é inválida — uma lacuna real não é zero
+  let seg = [], segs = [];
+  meses.forEach((m, i) => {
+    if (invalidas.has(m)) { if (seg.length) segs.push(seg); seg = []; }
+    else seg.push([x(i), y(vals[i])]);
+  });
+  if (seg.length) segs.push(seg);
+  segs.forEach(s => {
+    svg.appendChild(svgEl('path', {
+      d: 'M' + s.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L'),
+      class: 'serie-line', stroke: 'var(--s1)'
+    }));
+  });
+  // ponte tracejada sobre a lacuna, para não sugerir que a série terminou
+  for (let k = 0; k < segs.length - 1; k++) {
+    const a = segs[k][segs[k].length - 1], b = segs[k + 1][0];
+    svg.appendChild(svgEl('path', {d: `M${a[0]},${a[1]}L${b[0]},${b[1]}`,
+      class: 'serie-line gap-line', stroke: 'var(--s1)'}));
+  }
+
+  // eixo x: janeiro de cada ano
+  meses.forEach((m, i) => {
+    if (!m.endsWith('-01')) return;
+    const t = svgEl('text', {x: x(i), y: mt + ih + 20, class: 'tick', 'text-anchor': 'middle'});
+    t.textContent = m.slice(0, 4);
+    svg.appendChild(t);
+  });
+  svg.appendChild(svgEl('line', {x1: ml, x2: ml + iw, y1: mt + ih, y2: mt + ih, class: 'baseline'}));
+
+  // camada de hover: crosshair + tooltip
+  const cross = svgEl('line', {y1: mt, y2: mt + ih, class: 'marco-line', opacity: 0});
+  const foco = svgEl('circle', {r: 4.5, fill: 'var(--s1)', stroke: 'var(--surface-1)', 'stroke-width': 2, opacity: 0});
+  svg.appendChild(cross); svg.appendChild(foco);
+  const hit = svgEl('rect', {x: ml, y: mt, width: iw, height: ih, fill: 'transparent', style: 'cursor:crosshair'});
+  svg.appendChild(hit);
+
+  hit.addEventListener('mousemove', ev => {
+    const bb = svg.getBoundingClientRect();
+    const px = (ev.clientX - bb.left) / bb.width * W;
+    let i = Math.round((px - ml) / iw * (meses.length - 1));
+    i = Math.max(0, Math.min(meses.length - 1, i));
+    const m = meses[i], invalida = invalidas.has(m);
+    cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('opacity', 1);
+    if (!invalida) {
+      foco.setAttribute('cx', x(i)); foco.setAttribute('cy', y(vals[i])); foco.setAttribute('opacity', 1);
+    } else foco.setAttribute('opacity', 0);
+    const marco = d.marcos.find(k => k.mes === m);
+    let h = `<div class="t-h">${rotuloMes(m)}</div>`;
+    h += invalida
+      ? `<div class="t-r"><span>Competência</span><b>sem dado</b></div>
+         <div class="t-r" style="margin-top:4px">o SISCAN não processou esta competência</div>`
+      : `<div class="t-r"><span>Exames</span><b>${fmt(vals[i])}</b></div>
+         <div class="t-r"><span>Razão</span><b>${fmt3(d.razao_mensal[i])}</b></div>`;
+    if (marco) h += `<div class="t-r" style="margin-top:6px"><b>${marco.id} ${marco.rotulo}</b></div>
+                     <div class="t-r">${marco.detalhe}</div>`;
+    mostraTip(ev, h);
+  });
+  hit.addEventListener('mouseleave', () => {
+    escondeTip(); cross.setAttribute('opacity', 0); foco.setAttribute('opacity', 0);
+  });
+  return svg;
+}
+
+/* Desfecho e controle, indexados à base comum jan/2018 = 100.
+   Indexar é o que permite as duas séries num eixo só — nunca dual-axis. */
+function desfechoControle(d) {
+  const W = 1040, H = 300, ml = 46, mr = 96, mt = 22, mb = 42;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const meses = d.meses, invalidas = new Set(d.competencias_invalidas);
+
+  const series = [
+    {k: 'citopatologico', nome: 'Citopatológico 25–64', curto: 'Cito 25–64', cor: 'var(--s1)'},
+    {k: 'cito_controle_fora_faixa', nome: 'Fora da faixa (controle)', curto: 'Fora da faixa', cor: 'var(--s2)'},
+    {k: 'mamografia', nome: 'Mamografia 50–69', curto: 'Mamografia', cor: 'var(--s3)'},
+  ];
+  // média móvel de 12 meses, indexada: a série bruta é sazonal demais para ler três linhas juntas
+  const idx = {};
+  series.forEach(s => {
+    const v = d.series[s.k];
+    const mm = v.map((_, i) => {
+      if (i < 11) return null;
+      const jan = v.slice(i - 11, i + 1).filter((_, j) => !invalidas.has(meses[i - 11 + j]));
+      return jan.reduce((a, b) => a + b, 0) / jan.length;
+    });
+    const base = mm.find(x => x != null);
+    idx[s.k] = mm.map(x => x == null ? null : x / base * 100);
+  });
+
+  const todos = series.flatMap(s => idx[s.k]).filter(x => x != null);
+  const max = Math.max(...todos) * 1.06, min = Math.min(...todos, 100) * 0.94;
+  const x = i => ml + (i / (meses.length - 1)) * iw;
+  const y = v => mt + ih - ((v - min) / (max - min)) * ih;
+
+  const svg = svgEl('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img',
+    'aria-label': 'Comparação indexada entre o desfecho e as séries-controle'});
+
+  [50, 100, 150, 200].forEach(v => {
+    if (v < min || v > max) return;
+    svg.appendChild(svgEl('line', {x1: ml, x2: ml + iw, y1: y(v), y2: y(v),
+      class: 'gridline', ...(v === 100 ? {stroke: 'var(--axis)'} : {})}));
+    const t = svgEl('text', {x: ml - 9, y: y(v) + 4, class: 'tick', 'text-anchor': 'end'});
+    t.textContent = v;
+    svg.appendChild(t);
+  });
+
+  d.marcos.forEach(mk => {
+    const i = meses.indexOf(mk.mes);
+    if (i < 0) return;
+    svg.appendChild(svgEl('line', {x1: x(i), x2: x(i), y1: mt, y2: mt + ih, class: 'marco-line'}));
+  });
+
+  series.forEach(s => {
+    const pts = idx[s.k].map((v, i) => v == null ? null : [x(i), y(v)]).filter(Boolean);
+    if (!pts.length) return;
+    svg.appendChild(svgEl('path', {
+      d: 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L'),
+      class: 'serie-line', stroke: s.cor
+    }));
+    // rótulo direto: identidade nunca fica só na cor
+    const ult = pts[pts.length - 1];
+    const t = svgEl('text', {x: ult[0] + 8, y: ult[1] + 4, 'font-size': 11.5,
+      fill: 'var(--text-secondary)', 'font-weight': 550});
+    t.textContent = s.curto;
+    svg.appendChild(t);
+  });
+
+  meses.forEach((m, i) => {
+    if (!m.endsWith('-01')) return;
+    const t = svgEl('text', {x: x(i), y: mt + ih + 19, class: 'tick', 'text-anchor': 'middle'});
+    t.textContent = m.slice(0, 4);
+    svg.appendChild(t);
+  });
+  svg.appendChild(svgEl('line', {x1: ml, x2: ml + iw, y1: mt + ih, y2: mt + ih, class: 'baseline'}));
+
+  const hit = svgEl('rect', {x: ml, y: mt, width: iw, height: ih, fill: 'transparent', style: 'cursor:crosshair'});
+  svg.appendChild(hit);
+  hit.addEventListener('mousemove', ev => {
+    const bb = svg.getBoundingClientRect();
+    let i = Math.round(((ev.clientX - bb.left) / bb.width * W - ml) / iw * (meses.length - 1));
+    i = Math.max(0, Math.min(meses.length - 1, i));
+    let h = `<div class="t-h">${rotuloMes(meses[i])} · índice</div>`;
+    series.forEach(s => {
+      const v = idx[s.k][i];
+      h += `<div class="t-r"><span>${s.nome}</span><b>${v == null ? '—' : fmt2(v)}</b></div>`;
+    });
+    mostraTip(ev, h);
+  });
+  hit.addEventListener('mouseleave', escondeTip);
+  return svg;
+}
+
+/* Razão de exames por ano. Magnitude ordenada → sequencial de um hue. */
+function razaoAnual(d) {
+  const anos = Object.keys(d.razao_anual).sort();
+  const W = 1040, H = 230, ml = 46, mr = 16, mt = 26, mb = 42;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const max = 0.5;
+  const bw = iw / anos.length;
+  const svg = svgEl('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img',
+    'aria-label': 'Razão de exames citopatológicos por ano em Pernambuco'});
+
+  [0.1, 0.2, 0.3, 0.4, 0.5].forEach(v => {
+    svg.appendChild(svgEl('line', {x1: ml, x2: ml + iw, y1: mt + ih - v / max * ih,
+      x: 0, y2: mt + ih - v / max * ih, class: 'gridline'}));
+    const t = svgEl('text', {x: ml - 9, y: mt + ih - v / max * ih + 4, class: 'tick', 'text-anchor': 'end'});
+    t.textContent = fmt2(v);
+    svg.appendChild(t);
+  });
+
+  anos.forEach((a, i) => {
+    const v = d.razao_anual[a];
+    const h = v / max * ih;
+    const parcial = a === anos[anos.length - 1];
+    const g = svgEl('g');
+    // topo arredondado em 4px, ancorado na linha de base
+    const bx = ml + i * bw + bw * 0.18, bwid = bw * 0.64, by = mt + ih - h;
+    g.appendChild(svgEl('path', {
+      d: `M${bx},${mt + ih}L${bx},${by + 4}Q${bx},${by} ${bx + 4},${by}L${bx + bwid - 4},${by}Q${bx + bwid},${by} ${bx + bwid},${by + 4}L${bx + bwid},${mt + ih}Z`,
+      fill: parcial ? 'var(--seq-250)' : 'var(--seq-450)'
+    }));
+    const lab = svgEl('text', {x: bx + bwid / 2, y: by - 7, class: 'tick', 'text-anchor': 'middle',
+      fill: 'var(--text-secondary)', 'font-weight': 600});
+    lab.textContent = fmt3(v);
+    g.appendChild(lab);
+    const ax = svgEl('text', {x: bx + bwid / 2, y: mt + ih + 19, class: 'tick', 'text-anchor': 'middle'});
+    ax.textContent = a + (parcial ? '*' : '');
+    g.appendChild(ax);
+    g.style.cursor = 'pointer';
+    g.addEventListener('mousemove', ev => mostraTip(ev,
+      `<div class="t-h">${a}${parcial ? ' (parcial)' : ''}</div>
+       <div class="t-r"><span>Razão de exames</span><b>${fmt3(v)}</b></div>
+       <div class="t-r"><span>Parâmetro INCA</span><b>1,000</b></div>`));
+    g.addEventListener('mouseleave', escondeTip);
+    svg.appendChild(g);
+  });
+  svg.appendChild(svgEl('line', {x1: ml, x2: ml + iw, y1: mt + ih, y2: mt + ih, class: 'baseline'}));
+  return svg;
+}
+
+/* Distribuição municipal: 185 municípios ordenados. A dispersão é o assunto —
+   sequencial por magnitude, com os extremos rotulados. */
+function distribuicaoMunicipal(d) {
+  const muns = d.municipios;
+  const W = 1040, H = 260, ml = 46, mr = 16, mt = 22, mb = 44;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const max = Math.max(...muns.map(m => m.razao)) * 1.05;
+  const bw = iw / muns.length;
+  const svg = svgEl('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img',
+    'aria-label': `Razão de exames por município de Pernambuco em ${d.ano_referencia}, ordenada`});
+
+  [0.5, 1.0].forEach(v => {
+    if (v > max) return;
+    const yy = mt + ih - v / max * ih;
+    svg.appendChild(svgEl('line', {x1: ml, x2: ml + iw, y1: yy, y2: yy, class: 'gridline'}));
+    const t = svgEl('text', {x: ml - 9, y: yy + 4, class: 'tick', 'text-anchor': 'end'});
+    t.textContent = fmt2(v);
+    svg.appendChild(t);
+  });
+
+  const escalaCor = r => {
+    const p = r / max;
+    return p > .66 ? 'var(--seq-650)' : p > .33 ? 'var(--seq-450)' : p > .12 ? 'var(--seq-250)' : 'var(--seq-100)';
+  };
+
+  muns.forEach((m, i) => {
+    const h = Math.max(1.5, m.razao / max * ih);
+    const r = svgEl('rect', {
+      x: ml + i * bw, y: mt + ih - h, width: Math.max(1.2, bw - 0.8), height: h,
+      fill: escalaCor(m.razao), style: 'cursor:pointer'
+    });
+    r.addEventListener('mousemove', ev => mostraTip(ev,
+      `<div class="t-h">${m.nome}</div>
+       <div class="t-r"><span>Razão de exames</span><b>${fmt3(m.razao)}</b></div>
+       <div class="t-r"><span>Exames em ${d.ano_referencia}</span><b>${fmt(m.exames)}</b></div>
+       <div class="t-r"><span>Mulheres 25–64</span><b>${fmt(m.pop)}</b></div>
+       <div class="t-r"><span>Posição</span><b>${i + 1}º de ${muns.length}</b></div>`));
+    r.addEventListener('mouseleave', escondeTip);
+    svg.appendChild(r);
+  });
+
+  const eixo = svgEl('text', {x: ml, y: mt + ih + 20, class: 'tick'});
+  eixo.textContent = `← maior razão            ${muns.length} municípios ordenados            menor razão →`;
+  svg.appendChild(eixo);
+  svg.appendChild(svgEl('line', {x1: ml, x2: ml + iw, y1: mt + ih, y2: mt + ih, class: 'baseline'}));
+  return svg;
+}
+
+function tabelaMunicipios(d) {
+  const t = d.municipios;
+  const linhas = [...t.slice(0, 5), null, ...t.slice(-5)];
+  const corpo = linhas.map(m => m === null
+    ? `<tr><td colspan="4" style="color:var(--muted);text-align:center">⋯ ${t.length - 10} municípios ⋯</td></tr>`
+    : `<tr><td>${m.nome}</td><td class="num">${fmt3(m.razao)}</td>
+         <td class="num">${fmt(m.exames)}</td><td class="num">${fmt(m.pop)}</td></tr>`).join('');
+  return `<table>
+    <caption>Extremos da distribuição municipal em ${d.ano_referencia}. A tabela completa está no JSON de dados.</caption>
+    <thead><tr><th>Município</th><th class="num">Razão</th>
+      <th class="num">Exames</th><th class="num">Mulheres 25–64</th></tr></thead>
+    <tbody>${corpo}</tbody></table>`;
+}
+
+function render(d) {
+  const r = d.resumo;
+  const ultRazao = d.razao_anual[d.ano_referencia];
+  const anos = Object.keys(d.razao_anual).sort();
+  const nadir = d.meses.reduce((best, m, i) =>
+    (d.series.citopatologico[i] < d.series.citopatologico[best] &&
+     !d.competencias_invalidas.includes(m)) ? i : best, 0);
+
+  document.getElementById('app').innerHTML = `
+<header>
+  <h1>Rastreamento do câncer do colo do útero em Pernambuco</h1>
+  <p class="sub">Painel de dados do estudo ecológico de séries temporais interrompidas sobre a
+  cobertura de exames citopatológicos nos municípios de Pernambuco, durante a transição do modelo
+  de cofinanciamento federal da Atenção Primária — do Previne Brasil ao Saúde Brasil 360.</p>
+  <span class="tag">SISCAN · município de residência</span>
+  <span class="tag">Mulheres 25–64 anos</span>
+  <span class="tag">${r.primeira_competencia} a ${r.ultima_competencia}</span>
+  <span class="tag">Atualizado em ${d.gerado_em}</span>
+</header>
+
+<section>
+  <div class="hero">
+    <div class="fig">${fmt3(ultRazao)}</div>
+    <div class="unit">razão de exames citopatológicos em ${d.ano_referencia} — exames realizados
+    por mulher-ano esperada na população-alvo. O parâmetro do INCA é 1,000, que corresponde à
+    cobertura trienal completa.</div>
+  </div>
+</section>
+
+<section>
+  <div class="kpis">
+    <div class="kpi"><div class="label">Exames citopatológicos</div>
+      <div class="value">${fmt(r.total_exames_citopatologicos)}</div>
+      <div class="foot">mulheres de 25 a 64 anos</div></div>
+    <div class="kpi"><div class="label">Municípios</div>
+      <div class="value">${r.municipios}</div>
+      <div class="foot">painel completo de PE</div></div>
+    <div class="kpi"><div class="label">Competências</div>
+      <div class="value">${r.meses_com_dado}<span style="font-size:17px;color:var(--muted)"> / ${r.meses_da_janela}</span></div>
+      <div class="foot">meses da janela do estudo</div></div>
+    <div class="kpi"><div class="label">Queda no auge da pandemia</div>
+      <div class="value" style="color:var(--critical)">−93%</div>
+      <div class="foot">${rotuloMes(d.meses[nadir])} contra janeiro de 2020</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Exames citopatológicos por competência</h2>
+  <p class="note">Contagem mensal em mulheres de 25 a 64 anos, por município de residência,
+  agregada para o estado. As linhas tracejadas verticais marcam os pontos de mudança normativa
+  que o modelo estima. Passe o cursor para ver cada competência.</p>
+  <div class="card"><figure>
+    <div class="scroll" id="c-serie"></div>
+    <figcaption>Fonte: SISCAN/DATASUS. A série é interrompida em agosto e setembro de 2022:
+    o SISCAN não processou dados em nenhuma unidade da federação em agosto, e setembro recebeu
+    o transbordo. As duas competências são tratadas como ausentes, não como zero.</figcaption>
+  </figure></div>
+</section>
+
+<section>
+  <h2>Razão de exames por ano</h2>
+  <p class="note">Exames realizados divididos pela população-alvo dividida por três — o fator de
+  divisão trienal do parâmetro INCA. Um valor de 1,000 significaria rastrear toda a população-alvo
+  a cada três anos.</p>
+  <div class="card"><figure>
+    <div class="scroll" id="c-razao"></div>
+    <figcaption>* ${anos[anos.length - 1]} é ano parcial, com dados até ${r.ultima_competencia}.
+    Pernambuco opera entre um terço e dois quintos do parâmetro em todo o período.</figcaption>
+  </figure></div>
+</section>
+
+<section>
+  <h2>O desfecho e as séries-controle</h2>
+  <p class="note">Média móvel de doze meses, indexada à primeira janela completa igual a 100.
+  Indexar é o que permite ler as três séries num eixo único. A série de mulheres fora da faixa
+  de 25 a 64 anos é o controle por característica: compartilha o choque da pandemia e a via de
+  oferta, mas não entra no numerador de nenhum indicador de financiamento.</p>
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--s1)"></i>Citopatológico 25–64 (desfecho)</span>
+    <span><i class="swatch" style="background:var(--s2)"></i>Citopatológico fora da faixa (controle)</span>
+    <span><i class="swatch" style="background:var(--s3)"></i>Mamografia 50–69</span>
+  </div>
+  <div class="card"><figure>
+    <div class="scroll" id="c-ctrl"></div>
+    <figcaption>A mamografia deixa de servir como controle a partir de maio de 2025: o indicador C7
+    agrega, na mesma fórmula ponderada, o rastreamento de colo e o de mama, de modo que os dois
+    passam a ser co-incentivados.</figcaption>
+  </figure></div>
+</section>
+
+<section>
+  <h2>Heterogeneidade entre municípios</h2>
+  <p class="note">Cada barra é um dos ${r.municipios} municípios em ${d.ano_referencia}, ordenados da
+  maior para a menor razão de exames. É esta dispersão que sustenta o poder estatístico do painel —
+  e ela é a razão de a análise ser municipal, e não estadual agregada.</p>
+  <div class="card"><figure>
+    <div class="scroll" id="c-dist"></div>
+    <figcaption>A razão vai de ${fmt3(d.municipios[0].razao)} em ${d.municipios[0].nome} a
+    ${fmt3(d.municipios[d.municipios.length - 1].razao)} em ${d.municipios[d.municipios.length - 1].nome}.
+    Municípios pequenos produzem razões instáveis, o que o modelo acomoda por efeitos aleatórios.</figcaption>
+  </figure>
+  <details><summary>Ver os extremos em tabela</summary>${tabelaMunicipios(d)}</details>
+  </div>
+</section>
+
+<section>
+  <h2>Marcos normativos modelados</h2>
+  <p class="note">A transição entre os modelos de financiamento não é um evento datado, e sim um
+  processo escalonado. Tratá-la como interrupção única seria erro de especificação.</p>
+  <div class="card"><table>
+    <thead><tr><th>Marco</th><th>Competência</th><th>Evento</th><th>Base normativa</th></tr></thead>
+    <tbody>${d.marcos.map(m => `<tr><td><b>${m.id}</b></td><td>${rotuloMes(m.mes)}</td>
+      <td>${m.rotulo}</td><td style="color:var(--text-secondary)">${m.detalhe}</td></tr>`).join('')}</tbody>
+  </table>
+  <div class="alerta"><b>O indicador C7 nunca carregou risco financeiro de perda dentro da janela
+  do estudo.</b> A Portaria GM/MS 10.994, de 13 de maio de 2026, manteve a classificação "bom" até
+  o primeiro quadrimestre de 2026 e, no segundo, instituiu implantação assimétrica: apenas equipes
+  classificadas como "ótimo" recebem valor diferenciado, enquanto "bom", "suficiente" e "regular"
+  recebem todas o valor de "bom". A implementação integral começa no primeiro quadrimestre de 2027,
+  fora da janela. A hipótese do estudo é, por isso, de exposição a incentivo de baixa intensidade.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Fontes de dados</h2>
+  <p class="note">Todas as fontes são públicas e o acesso é programático e reprodutível. Os comandos
+  abaixo são os efetivamente usados pelo pipeline, verificados em 1º de agosto de 2026.</p>
+  <div class="fontes">
+    <div class="fonte">
+      <div class="papel">Desfecho primário</div>
+      <h3>SISCAN — Sistema de Informação do Câncer</h3>
+      <p>Exames citopatológicos do colo do útero por município de <b>residência</b>, competência
+      mensal, faixa etária quinquenal. Tabulação via TABNET/DATASUS com acesso por POST.</p>
+      <code>tabnet.datasus.gov.br/cgi/dhdat.exe?
+SISCAN/cito_colo_residpe.def</code>
+    </div>
+    <div class="fonte">
+      <div class="papel">Denominador</div>
+      <h3>POPSVS — estimativas populacionais</h3>
+      <p>População feminina por município, ano e idade simples, agregada em faixas quinquenais.
+      Estudo de estimativas da SVS/MS com o IBGE, microdados em DBF.</p>
+      <code>ftp.datasus.gov.br/dissemin/publicos/
+IBGE/POPSVS/POPSBR&lt;aa&gt;.zip</code>
+    </div>
+    <div class="fonte">
+      <div class="papel">Frame territorial</div>
+      <h3>IBGE — malha municipal</h3>
+      <p>Os ${r.municipios} códigos municipais de Pernambuco, usados como frame canônico para o
+      preenchimento de zeros no painel.</p>
+      <code>servicodados.ibge.gov.br/api/v1/
+localidades/estados/26/municipios</code>
+    </div>
+    <div class="fonte">
+      <div class="papel">Séries-controle</div>
+      <h3>SISCAN — mamografia e faixas fora do alvo</h3>
+      <p>Mamografias de 50 a 69 anos e citopatológicos fora da faixa de 25 a 64, no mesmo recorte
+      territorial e temporal do desfecho.</p>
+      <code>SISCAN/mamografia_residpe.def</code>
+    </div>
+  </div>
+  <details>
+    <summary>Por que o SIA-SUS não é a fonte do desfecho</summary>
+    <p class="note" style="margin-top:10px">O Sistema de Informações Ambulatoriais registra a
+    produção faturada de citopatologia e seria uma via mais simples. Ele foi descartado por
+    evidência empírica: a distribuição etária da produção de citopatológico no SIA em Pernambuco,
+    em 2025, aloca 43% dos exames em mulheres de 20 a 24 anos, 19% em 65 a 69 anos, e apenas 9%
+    na faixa-alvo inteira de 25 a 64. Um programa de rastreamento indicado para 25 a 64 anos não
+    produz essa distribuição — o campo de idade do SIA está inutilizável para o recorte que o
+    desfecho exige. O SIA permanece útil apenas como verificação externa de ordem de grandeza.</p>
+  </details>
+</section>
+
+<section>
+  <h2>Qualidade e limitações dos dados</h2>
+  <div class="card">
+    <table>
+      <tbody>
+        <tr><td>Competências ausentes</td>
+          <td class="num">${r.competencias_invalidas.map(rotuloMes).join(' e ')}</td></tr>
+        <tr><td>Competências provisórias</td>
+          <td class="num">a partir de ${rotuloMes(r.provisorio_a_partir_de)}</td></tr>
+        <tr><td>Cobertura do denominador</td><td class="num">${r.cobertura_denominador}</td></tr>
+        <tr><td>Meses da janela ainda não publicados</td>
+          <td class="num">${r.meses_da_janela - r.meses_com_dado}</td></tr>
+      </tbody>
+    </table>
+    <div class="alerta">
+      <b>Subnotificação por implantação incompleta.</b> O DATASUS adverte que o SISCAN não está
+      plenamente implantado em todos os estados e municípios, de modo que os valores podem não
+      corresponder à totalidade dos exames realizados. Se a cobertura do próprio sistema cresceu
+      em Pernambuco ao longo da janela, parte da tendência observada é artefato de implantação e
+      pode se confundir com o primeiro ponto de mudança. Quantificar essa cobertura é etapa
+      obrigatória da análise.
+    </div>
+    <div class="alerta">
+      <b>Contagem de exames não é cobertura populacional.</b> A razão de exames pode subir sem que
+      a cobertura suba, se os exames adicionais recaírem sobre mulheres já rastreadas. Todo efeito
+      estimado neste estudo é resposta de <b>produção</b>, não de cobertura, e a ambiguidade entre
+      captar novas mulheres e repetir exames nas já rastreadas é irredutível sem decomposição
+      longitudinal individual.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Estudo ecológico de séries temporais interrompidas em painel de municípios. Dissertação de
+  mestrado em Saúde Coletiva. Os dados agregados, o pipeline de coleta e a documentação
+  metodológica estão em
+  <a href="https://github.com/MarkusLC/mestrado-ccu-pe">github.com/MarkusLC/mestrado-ccu-pe</a>.</p>
+  <p>Dados públicos do DATASUS e do IBGE. Última atualização do painel em ${d.gerado_em}.
+  Última competência disponível: ${rotuloMes(r.ultima_competencia)}.</p>
+</footer>`;
+
+  document.getElementById('c-serie').appendChild(serieTemporal(d));
+  document.getElementById('c-razao').appendChild(razaoAnual(d));
+  document.getElementById('c-ctrl').appendChild(desfechoControle(d));
+  document.getElementById('c-dist').appendChild(distribuicaoMunicipal(d));
+}
+
+(async () => {
+  for (const url of [DATA_URL, FALLBACK]) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      return render(await r.json());
+    } catch (e) { /* tenta o próximo */ }
+  }
+  document.getElementById('app').innerHTML =
+    '<div class="err">Não foi possível carregar <code>data/dashboard.json</code>.<br>' +
+    'Rode <code>python3 pipeline.py</code> para gerar os dados.</div>';
+})();
+</script>
+</body>
+</html>
