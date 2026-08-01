@@ -124,6 +124,27 @@ que é uma sorte: ela não se confunde diretamente com um efeito de interesse. M
 segmento que serve de base para extrapolar o contrafactual de τ3, e é justamente a inclinação desse
 segmento que define o contrafactual contra o qual o efeito do Saúde Brasil 360 será medido.
 
+### Onde está o gargalo: no laboratório, não no transporte
+
+O `.def` expõe duas medidas temporais distintas, e compará-las localiza a etapa que desacelerou.
+`Interv Coleta` mede da coleta até a chegada ao laboratório; `Tempo Exame` mede o percurso completo,
+até a liberação do laudo.
+
+Proporção com intervalo **coleta → laboratório** de até 10 dias, por ano de liberação:
+
+| 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|---|
+| 69,6% | 73,9% | 70,2% | 70,2% | 69,1% | 68,4% | 64,9% | 68,4% | 69,0% |
+
+Essa etapa é **estável**. A logística de transporte da amostra não mudou de forma material em nove
+anos. Como o tempo total caiu de 65,7% para 50,7% entre 2021 e 2022, a desaceleração está
+inteiramente na etapa seguinte: o **processamento dentro do laboratório**.
+
+Isso é útil por dois motivos. Primeiro, restringe a explicação: não é falha de coleta na atenção
+primária nem de transporte, é capacidade laboratorial. Segundo, a covariável a construir fica mais
+precisa — o que importa é o tempo de processamento, e ele é uma característica da rede de
+laboratórios, não do comportamento das equipes de APS.
+
 ### Encaminhamento
 
 1. **Incluir a composição do tempo de liberação como covariável variante no tempo** no nível
@@ -133,8 +154,13 @@ segmento que define o contrafactual contra o qual o efeito do Saúde Brasil 360 
    volume de exames, e não é função da variável dependente.
 2. **Pré-especificar a análise de sensibilidade com a série datada por `CO_ANO_MES_RESULTADO`**,
    que é o eixo alternativo disponível na fonte agregada.
-3. Se os microdados CSV forem baixados, **reconstruir a data de coleta** por exame e reestimar. Este
-   é o desempate definitivo, e o custo é de transferência, não de método.
+3. A reconstrução da data de coleta por exame, a partir dos microdados individuais, permanece como
+   o desempate definitivo — mas **não é executável hoje**. O FTP do DATASUS entregou 12,5 KB/s na
+   medição de 01/08/2026, o que dá 38 horas para um único ano-calendário e mais de 300 horas para a
+   janela completa. O script `baixa_microdados.py` fica no repositório, é idempotente e retomável, e
+   deve ser executado quando o servidor estiver responsivo, ou a partir de uma rede com melhor
+   trânsito até o DATASUS. A via agregada acima responde à maior parte da pergunta a um custo de
+   segundos.
 
 ## 5. O que ainda não foi medido
 

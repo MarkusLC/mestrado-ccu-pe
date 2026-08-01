@@ -575,6 +575,8 @@ def gera_dashboard(painel, resumo):
              "Motivo do exame"),
             ("tempo_liberacao", "Tempo Exame|CO_TEMPO_EXAME|1|CITO\\TempoExame.CNV",
              "Tempo entre a coleta e a liberação do laudo"),
+            ("interv_coleta", "Interv Coleta|CO_INTERVALO_COLETA|1|CITO\\IntColeta.CNV",
+             "Intervalo entre a coleta e a chegada ao laboratório"),
         ]:
             print(f"  qualidade: {chave}...", end=" ", flush=True)
             r = tabula_por_ano(val, rot)

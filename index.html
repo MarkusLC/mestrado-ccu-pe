@@ -21,7 +21,9 @@
   --s3: #1baf7a;
   --seq-100: #cde2fb;
   --seq-250: #86b6ef;
+  --seq-400: #3987e5;
   --seq-450: #2a78d6;
+  --seq-500: #256abf;
   --seq-650: #104281;
   --critical: #d03b3b;
   --warning: #fab219;
@@ -42,7 +44,9 @@
     --s3: #199e70;
     --seq-100: #104281;
     --seq-250: #184f95;
+    --seq-400: #256abf;
     --seq-450: #3987e5;
+    --seq-500: #3987e5;
     --seq-650: #9ec5f4;
   }
 }
@@ -60,7 +64,9 @@
   --s3: #199e70;
   --seq-100: #104281;
   --seq-250: #184f95;
+  --seq-400: #256abf;
   --seq-450: #3987e5;
+  --seq-500: #3987e5;
   --seq-650: #9ec5f4;
 }
 
@@ -713,6 +719,16 @@ function render(d) {
       <figcaption>A proporção liberada em até 30 dias cai de 65,7% em 2021 para 50,7% em 2022 e não
       se recupera; a cauda acima de 60 dias mais que dobra até 2026.</figcaption>
     </figure>
+
+    <h3 style="margin-top:26px">O gargalo é o laboratório, não o transporte</h3>
+    <p class="note" style="margin-bottom:14px">A fonte separa as duas etapas. Este gráfico mostra
+    só o trecho da coleta até a chegada da amostra ao laboratório.</p>
+    <figure><div class="scroll" id="c-coleta"></div>
+      <figcaption>Essa etapa é estável: a proporção que chega ao laboratório em até 10 dias fica
+      entre 65% e 74% em todos os anos, sem quebra. Como o tempo total caiu quinze pontos entre 2021
+      e 2022, a desaceleração está inteiramente no processamento laboratorial — não na coleta pela
+      atenção primária nem no transporte da amostra.</figcaption>
+    </figure>
     <div class="alerta">
       <b>Uma defasagem que muda é pior que uma defasagem grande.</b> Se o atraso fosse constante,
       ele apenas deslocaria a série inteira, e bastaria uma análise de sensibilidade empurrando os
@@ -920,6 +936,16 @@ localidades/estados/26/municipios</code>
     const cats = Object.keys(q.tempo_liberacao.categorias);
     document.getElementById('c-tempo').appendChild(
       composicaoPorAno(q.tempo_liberacao, ordem.filter(o => cats.includes(o)), RAMPA, 0));
+  }
+  if (q.interv_coleta) {
+    // mesma rampa que o gráfico acima: as duas figuras medem a mesma grandeza
+    // em trechos diferentes do percurso, e comparar exige escala de cor igual
+    const cats = Object.keys(q.interv_coleta.categorias);
+    const ordem = ['0 - 10 dias', '11 - 20 dias', '21 - 30 dias', '> 30 dias']
+      .filter(o => cats.includes(o));
+    const rampa4 = ['var(--seq-250)', 'var(--seq-400)', 'var(--seq-500)', 'var(--seq-650)'];
+    document.getElementById('c-coleta').appendChild(
+      composicaoPorAno(q.interv_coleta, ordem, rampa4, 0));
   }
 }
 
