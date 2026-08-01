@@ -201,6 +201,18 @@ footer { border-top: 1px solid var(--border); padding-top: 20px; font-size: 13px
   color: var(--text-primary); margin-bottom: 14px;
 }
 .busca:focus { outline: 2px solid var(--s1); outline-offset: -1px; }
+.linha-ferramentas {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; margin-bottom: 14px;
+}
+.linha-ferramentas .busca { margin-bottom: 0; }
+.botao {
+  appearance: none; font: inherit; font-size: 13px; font-weight: 550; cursor: pointer;
+  padding: 9px 15px; border: 1px solid var(--border); border-radius: 7px;
+  background: var(--surface-1); color: var(--text-primary);
+}
+.botao:hover { border-color: var(--s1); color: var(--s1); }
+.botao:focus-visible { outline: 2px solid var(--s1); outline-offset: 1px; }
 .barra { display: inline-block; height: 8px; border-radius: 2px; background: var(--seq-450); vertical-align: middle; }
 .contagem { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
 .baixar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
@@ -616,6 +628,50 @@ function tabelaMunicipios(d) {
     <tbody>${corpo}</tbody></table>`;
 }
 
+/* Exportação em planilha.
+
+   Separador ';' e BOM UTF-8: é o que faz o Excel em português abrir o arquivo
+   com as colunas separadas e os acentos corretos. Com ',' e sem BOM, o Excel
+   brasileiro joga tudo numa coluna só e corrompe os acentos.
+
+   O bloco de procedência vai dentro do próprio arquivo, antes dos dados, no
+   mesmo formato que o DATASUS usa nas suas exportações — um CSV que circula
+   solto sem dizer de onde veio é um dado órfão. */
+function baixaCSV(nomeArquivo, procedencia, colunas, linhas) {
+  const esc = v => {
+    const s = v == null ? '' : String(v);
+    return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const partes = [
+    ...procedencia.map(l => esc(l)),
+    '',
+    colunas.map(esc).join(';'),
+    ...linhas.map(l => l.map(esc).join(';')),
+  ];
+  const blob = new Blob(['﻿' + partes.join('\r\n')], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = nomeArquivo;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function procedencia(d, oQue) {
+  const r = d.resumo;
+  return [
+    `${oQue} — estudo de séries temporais interrompidas do rastreamento do câncer do colo do útero em Pernambuco`,
+    `Fonte do desfecho: ${r.fonte_desfecho}`,
+    `Fonte do denominador: ${r.fonte_denominador}`,
+    `Offset: ${r.offset}`,
+    `Período: ${r.primeira_competencia} a ${r.ultima_competencia} · ${r.meses_com_dado} de ${r.meses_da_janela} competências da janela do estudo`,
+    `Competências sem dado: ${r.competencias_invalidas.map(rotuloMes).join(' e ')} — o SISCAN não as processou em nenhuma UF`,
+    `Competências provisórias: a partir de ${rotuloMes(r.provisorio_a_partir_de)} — ainda acumulam lançamento retroativo`,
+    `Contagem de exames não é cobertura populacional: os valores medem produção, não proporção de mulheres rastreadas`,
+    `Dados extraídos em ${d.gerado_em} · painel em https://markuslc.github.io/mestrado-ccu-pe/`,
+    `Pipeline e documentação em https://github.com/MarkusLC/mestrado-ccu-pe`,
+  ];
+}
+
 /* Abas. O hash da URL guarda a seleção, para que um link possa apontar
    direto para os dados ou para os documentos. */
 function montaAbas() {
@@ -652,10 +708,11 @@ function montaTabelaMunicipios(d) {
   // posição na ordenação original (por razão, decrescente) — não muda ao reordenar
   const base = d.municipios.map((m, i) => ({...m, pos: i + 1}));
   let col = 'razao', dir = -1;
+  let ultimasLinhas = base;  // o que está na tela agora, para a exportação
 
   const desenha = () => {
     const q = busca.value.trim().toLowerCase();
-    const linhas = base
+    const linhas = ultimasLinhas = base
       .filter(m => !q || m.nome.toLowerCase().includes(q) || m.cod.includes(q))
       .sort((a, b) => {
         const x = a[col], y = b[col];
@@ -687,6 +744,19 @@ function montaTabelaMunicipios(d) {
   });
   busca.addEventListener('input', desenha);
   desenha();
+
+  // exporta o que está na tela: o filtro e a ordenação valem para o arquivo
+  document.getElementById('csv-mun').addEventListener('click', () => {
+    baixaCSV(
+      `razao_exames_municipios_PE_${d.ano_referencia}.csv`,
+      [...procedencia(d, `Razão de exames por município, ${d.ano_referencia}`),
+       `Razão de exames = exames do ano / (população feminina de 25 a 64 anos / 3). Parâmetro INCA de referência: 1,000`,
+       busca.value.trim() ? `Filtro aplicado: "${busca.value.trim()}"` : `Todos os ${base.length} municípios`],
+      ['posicao', 'municipio', 'codigo_ibge', 'razao_de_exames', 'exames', 'mulheres_25_64'],
+      ultimasLinhas.map(m => [m.pos, m.nome, m.cod,
+        String(m.razao).replace('.', ','), m.exames, m.pop]),
+    );
+  });
 }
 
 function montaTabelaSeries(d) {
@@ -711,6 +781,32 @@ function montaTabelaSeries(d) {
       <td style="font-size:12.5px;color:var(--text-secondary)">${sit}</td>
     </tr>`;
   }).join('');
+
+  document.getElementById('csv-series').addEventListener('click', () => {
+    baixaCSV(
+      'series_mensais_CCU_PE_2018-2026.csv',
+      [...procedencia(d, 'Séries mensais agregadas para Pernambuco'),
+       'Razão mensal = exames do mês / (população-alvo / 3 / 12)',
+       'A série de controle "fora da faixa" reúne citopatológicos em mulheres fora de 25 a 64 anos, que não integram o numerador de nenhum indicador de financiamento',
+       'A mamografia deixa de servir como controle a partir de mai/2025, quando passa a ser co-incentivada pelo indicador C7'],
+      ['competencia', 'citopatologico_25_64', 'razao_mensal', 'controle_fora_da_faixa',
+       'mamografia_50_69', 'competencia_sem_dado', 'provisoria', 'marco'],
+      d.meses.map((m, i) => {
+        const ausente = invalidas.has(m);
+        const marco = marcos[m];
+        return [
+          m,
+          ausente ? '' : d.series.citopatologico[i],
+          ausente || d.razao_mensal[i] == null ? '' : String(d.razao_mensal[i]).replace('.', ','),
+          ausente ? '' : (d.series.cito_controle_fora_faixa?.[i] ?? ''),
+          ausente ? '' : (d.series.mamografia?.[i] ?? ''),
+          ausente ? 'sim' : 'nao',
+          m >= d.provisorio_a_partir_de ? 'sim' : 'nao',
+          marco ? `${marco.id} ${marco.rotulo}` : '',
+        ];
+      }),
+    );
+  });
 }
 
 function render(d) {
@@ -1002,8 +1098,11 @@ localidades/estados/26/municipios</code>
     <p class="note">Os ${r.municipios} municípios de Pernambuco em ${d.ano_referencia}, com a
     contagem de exames, a população-alvo e a razão resultante. Clique num cabeçalho para ordenar;
     use a busca para filtrar por nome ou por código do IBGE.</p>
-    <input class="busca" id="busca-mun" type="search" placeholder="Filtrar município ou código…"
-           aria-label="Filtrar municípios">
+    <div class="linha-ferramentas">
+      <input class="busca" id="busca-mun" type="search" placeholder="Filtrar município ou código…"
+             aria-label="Filtrar municípios">
+      <button class="botao" id="csv-mun" type="button">Baixar planilha (.csv)</button>
+    </div>
     <div class="tabela-wrap">
       <table id="tab-mun">
         <thead><tr>
@@ -1045,6 +1144,9 @@ localidades/estados/26/municipios</code>
     <p class="note">As três séries do estudo, agregadas para o estado, competência a competência.
     As competências sem dado aparecem em branco: agosto e setembro de 2022 não foram processados
     pelo SISCAN em nenhuma unidade da federação.</p>
+    <div class="linha-ferramentas">
+      <button class="botao" id="csv-series" type="button">Baixar planilha (.csv)</button>
+    </div>
     <div class="tabela-wrap">
       <table id="tab-series">
         <thead><tr>

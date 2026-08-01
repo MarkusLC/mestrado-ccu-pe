@@ -538,10 +538,17 @@ def gera_dashboard(painel, resumo):
             mun_pop[(r["cod_ibge"], ano)] = mun_pop.get((r["cod_ibge"], ano), 0) + (r["pop_alvo"] or 0)
             nomes[r["cod_ibge"]] = r["municipio"]
 
-    meses = sorted(series_mes["citopatologico"])
-    # razão mensal = exames do mês / (população-alvo / 3 / 12)
+    # A sequência tem de ser contínua até a última competência com dado. Se as
+    # competências ausentes forem simplesmente omitidas do array, o eixo do
+    # gráfico as trata como inexistentes e desenha julho de 2022 colado em
+    # outubro, comprimindo três meses num intervalo e escondendo a lacuna.
+    com_dado = sorted(series_mes["citopatologico"])
+    ultimo = max(com_dado)
+    meses = [m for m in meses_da_janela() if m <= ultimo]
+
     razao_mes = [
-        round(series_mes["citopatologico"][m] / (pop_mes[m] / 12 / 3), 4) if pop_mes[m] else None
+        round(series_mes["citopatologico"][m] / (pop_mes[m] / 12 / 3), 4)
+        if series_mes["citopatologico"].get(m) and pop_mes.get(m) else None
         for m in meses
     ]
 
@@ -584,9 +591,14 @@ def gera_dashboard(painel, resumo):
             print("ok" if r else "falhou")
         cache_q.write_text(json.dumps(qualidade, ensure_ascii=False, indent=1))
 
+    invalidas = set(MESES_INVALIDOS)
     dash = {
         "meses": meses,
-        "series": {s: [series_mes[s].get(m, 0) for m in meses] for s in series_mes},
+        # None nas competências que a fonte não processou — distinto de zero
+        "series": {
+            s: [None if m in invalidas else series_mes[s].get(m, 0) for m in meses]
+            for s in series_mes
+        },
         "qualidade": qualidade,
         "razao_mensal": razao_mes,
         "razao_anual": resumo["razao_de_exames_por_ano"],
