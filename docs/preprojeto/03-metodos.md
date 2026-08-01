@@ -449,7 +449,7 @@ INSTITUTO NACIONAL DE CÂNCER JOSÉ ALENCAR GOMES DA SILVA (INCA). **Diretrizes 
 
 INSTITUTO NACIONAL DE CÂNCER (INCA). **Dados e números sobre câncer do colo do útero: relatório anual 2023.** Rio de Janeiro: INCA, out. 2023.
 
-INSTITUTO NACIONAL DE CÂNCER (INCA). **Dados e números sobre câncer do colo do útero: relatório anual 2025.** Rio de Janeiro: INCA, 2025.
+INSTITUTO NACIONAL DE CÂNCER (INCA). **Controle do câncer do colo do útero no Brasil: dados e números 2025.** Organização de C. M. Ribeiro, D. N. Ramos, I. B. Claro, L. M. Costa, M. B. K. Dias e M. Assis. Rio de Janeiro: INCA, 2025.
 
 INSTITUTO NACIONAL DE CÂNCER (INCA). **Estimativa 2026: incidência de câncer no Brasil.** Rio de Janeiro: INCA, 2026.
 
