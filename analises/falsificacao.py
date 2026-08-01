@@ -79,6 +79,26 @@ print("=" * 96)
 print("VEREDITO")
 print("=" * 96)
 mags_placebo = sorted(abs(v) for _, v in efeitos_placebo)
+
+# exporta o resultado para o painel consumir
+export = {
+    'metodo': ('média da razão de exames nos 12 meses anteriores contra os 12 posteriores, '
+               'excluindo competências ausentes e provisórias'),
+    'marcos': [], 'placebos': [{'mes': m, 'delta_pct': round(v, 1)} for m, v in efeitos_placebo],
+    'placebo_mediana_abs': round(mags_placebo[len(mags_placebo) // 2], 1),
+    'placebo_max_abs': round(mags_placebo[-1], 1),
+    'placebo_n': len(mags_placebo),
+}
+for (rot, mes, desc), (_, v) in zip(
+        [r for r in REAIS if janela(r[1])], efeitos_reais):
+    r = janela(mes)
+    maiores = sum(1 for m in mags_placebo if m >= abs(v))
+    export['marcos'].append({
+        'marco': rot, 'mes': mes, 'descricao': desc,
+        'pre': round(r[0], 4), 'pos': round(r[1], 4), 'delta_pct': round(v, 1),
+        'placebos_maiores': maiores, 'p_aprox': round((maiores + 1) / (len(mags_placebo) + 1), 2),
+    })
+json.dump(export, open(RAIZ + '/data/falsificacao.json', 'w'), ensure_ascii=False, indent=1)
 print(f"  placebos: n={len(mags_placebo)}, mediana |Δ%| = {mags_placebo[len(mags_placebo)//2]:.1f}%, "
       f"máximo = {mags_placebo[-1]:.1f}%")
 print(f"  desvio-padrão dos efeitos placebo: {pstdev([v for _, v in efeitos_placebo]):.1f} pontos percentuais")

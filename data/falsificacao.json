@@ -1,0 +1,100 @@
+{
+ "metodo": "média da razão de exames nos 12 meses anteriores contra os 12 posteriores, excluindo competências ausentes e provisórias",
+ "marcos": [
+  {
+   "marco": "τ1",
+   "mes": "2020-01",
+   "descricao": "Previne Brasil",
+   "pre": 0.361,
+   "pos": 0.2195,
+   "delta_pct": -39.2,
+   "placebos_maiores": 1,
+   "p_aprox": 0.18
+  },
+  {
+   "marco": "τ2",
+   "mes": "2020-03",
+   "descricao": "COVID-19",
+   "pre": 0.355,
+   "pos": 0.206,
+   "delta_pct": -42.0,
+   "placebos_maiores": 1,
+   "p_aprox": 0.18
+  },
+  {
+   "marco": "τ2b",
+   "mes": "2021-01",
+   "descricao": "recuperação",
+   "pre": 0.2195,
+   "pos": 0.3347,
+   "delta_pct": 52.5,
+   "placebos_maiores": 0,
+   "p_aprox": 0.09
+  },
+  {
+   "marco": "τ3",
+   "mes": "2024-05",
+   "descricao": "Saúde Brasil 360 — estimando primário",
+   "pre": 0.409,
+   "pos": 0.3558,
+   "delta_pct": -13.0,
+   "placebos_maiores": 6,
+   "p_aprox": 0.64
+  },
+  {
+   "marco": "τ4",
+   "mes": "2025-05",
+   "descricao": "mensuração do C7",
+   "pre": 0.3558,
+   "pos": 0.3685,
+   "delta_pct": 3.6,
+   "placebos_maiores": 8,
+   "p_aprox": 0.82
+  }
+ ],
+ "placebos": [
+  {
+   "mes": "2018-07",
+   "delta_pct": 0.4
+  },
+  {
+   "mes": "2019-03",
+   "delta_pct": -14.3
+  },
+  {
+   "mes": "2019-09",
+   "delta_pct": -30.8
+  },
+  {
+   "mes": "2021-07",
+   "delta_pct": 45.3
+  },
+  {
+   "mes": "2022-03",
+   "delta_pct": 14.7
+  },
+  {
+   "mes": "2022-11",
+   "delta_pct": 14.2
+  },
+  {
+   "mes": "2023-04",
+   "delta_pct": 2.4
+  },
+  {
+   "mes": "2023-10",
+   "delta_pct": -6.8
+  },
+  {
+   "mes": "2024-11",
+   "delta_pct": -13.4
+  },
+  {
+   "mes": "2025-02",
+   "delta_pct": -4.1
+  }
+ ],
+ "placebo_mediana_abs": 14.2,
+ "placebo_max_abs": 45.3,
+ "placebo_n": 10
+}
