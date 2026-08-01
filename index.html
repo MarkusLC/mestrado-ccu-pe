@@ -482,6 +482,76 @@ function distribuicaoMunicipal(d) {
   return svg;
 }
 
+/* Composição ordenada por ano: barras 100% empilhadas com rampa ordinal de um
+   hue. A ordem das categorias carrega significado, então a cor é ordinal e não
+   categórica. Gap de 2px entre segmentos, como manda a especificação de marcas. */
+function composicaoPorAno(bloco, ordem, cores, destaque) {
+  const anos = Object.keys(Object.values(bloco.categorias)[0]).sort();
+  const W = 1040, H = 250, ml = 46, mr = 130, mt = 20, mb = 44;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const bw = iw / anos.length;
+  const svg = svgEl('svg', {viewBox: `0 0 ${W} ${H}`, role: 'img',
+    'aria-label': bloco.rotulo + ' por ano'});
+
+  [0, 25, 50, 75, 100].forEach(p => {
+    const yy = mt + ih - p / 100 * ih;
+    svg.appendChild(svgEl('line', {x1: ml, x2: ml + iw, y1: yy, y2: yy, class: 'gridline'}));
+    const t = svgEl('text', {x: ml - 9, y: yy + 4, class: 'tick', 'text-anchor': 'end'});
+    t.textContent = p + '%';
+    svg.appendChild(t);
+  });
+
+  anos.forEach((ano, i) => {
+    const total = ordem.reduce((s, c) => s + (bloco.categorias[c]?.[ano] || 0), 0);
+    if (!total) return;
+    let acc = 0;
+    const bx = ml + i * bw + bw * 0.16, bwid = bw * 0.68;
+    ordem.forEach((cat, k) => {
+      const v = bloco.categorias[cat]?.[ano] || 0;
+      const frac = v / total;
+      const alt = frac * ih;
+      const by = mt + ih - (acc + frac) * ih;
+      const g = svgEl('g');
+      g.appendChild(svgEl('rect', {
+        x: bx, y: by, width: bwid, height: Math.max(0, alt - 2), // 2px de folga entre segmentos
+        fill: cores[k], style: 'cursor:pointer'
+      }));
+      g.addEventListener('mousemove', ev => mostraTip(ev,
+        `<div class="t-h">${ano} · ${cat}</div>
+         <div class="t-r"><span>Exames</span><b>${fmt(v)}</b></div>
+         <div class="t-r"><span>Proporção</span><b>${fmt2(frac * 100)}%</b></div>`));
+      g.addEventListener('mouseleave', escondeTip);
+      svg.appendChild(g);
+      acc += frac;
+    });
+    // rótulo direto só na categoria de destaque — nunca um número em cada segmento
+    if (destaque != null) {
+      const v = bloco.categorias[ordem[destaque]]?.[ano] || 0;
+      const frac = v / total;
+      const t = svgEl('text', {x: bx + bwid / 2, y: mt + ih - frac * ih / 2 + 4,
+        class: 'tick', 'text-anchor': 'middle', fill: 'var(--surface-1)', 'font-weight': 640});
+      t.textContent = Math.round(frac * 100) + '%';
+      svg.appendChild(t);
+    }
+    const ax = svgEl('text', {x: bx + bwid / 2, y: mt + ih + 19, class: 'tick', 'text-anchor': 'middle'});
+    ax.textContent = ano.slice(2);
+    svg.appendChild(ax);
+  });
+
+  // legenda à direita, na ordem das camadas de baixo para cima
+  ordem.forEach((cat, k) => {
+    const yy = mt + 14 + k * 20;
+    svg.appendChild(svgEl('rect', {x: ml + iw + 14, y: yy - 9, width: 11, height: 11,
+      rx: 2.5, fill: cores[k]}));
+    const t = svgEl('text', {x: ml + iw + 31, y: yy, 'font-size': 11.5, fill: 'var(--text-secondary)'});
+    t.textContent = cat.length > 15 ? cat.slice(0, 14) + '…' : cat;
+    svg.appendChild(t);
+  });
+
+  svg.appendChild(svgEl('line', {x1: ml, x2: ml + iw, y1: mt + ih, y2: mt + ih, class: 'baseline'}));
+  return svg;
+}
+
 function tabelaMunicipios(d) {
   const t = d.municipios;
   const linhas = [...t.slice(0, 5), null, ...t.slice(-5)];
@@ -620,6 +690,42 @@ function render(d) {
 </section>
 
 <section>
+  <h2>O que a série mede, e com que atraso</h2>
+  <p class="note">Duas verificações sobre o desfecho, medidas na própria fonte. A primeira confirma
+  que a série é de rastreamento. A segunda é o problema mais sério que a extração revelou.</p>
+
+  <div class="card" style="margin-bottom:16px">
+    <h3>Composição por motivo do exame</h3>
+    <p class="note" style="margin-bottom:16px">Um desfecho de rastreio não deveria incluir exames de
+    acompanhamento de lesão já detectada. A contaminação é de 1,9%, e estável ao longo da janela —
+    varia entre 97% e 99% de rastreamento sem tendência.</p>
+    <div class="kpis" id="c-motivo"></div>
+    <p class="note" style="margin:16px 0 0">A restrição do numerador a rastreamento é refinamento,
+    não correção de viés — mas será adotada, porque a definição do desfecho é de rastreio e porque
+    a parcela de seguimento responde a um mecanismo diferente do incentivo estudado.</p>
+  </div>
+
+  <div class="card">
+    <h3>Tempo entre a coleta e a liberação do laudo</h3>
+    <p class="note" style="margin-bottom:14px">A série é datada pela liberação do laudo. A data da
+    coleta — o ato que a política incentiva — não existe como dimensão no TABNET.</p>
+    <figure><div class="scroll" id="c-tempo"></div>
+      <figcaption>A proporção liberada em até 30 dias cai de 65,7% em 2021 para 50,7% em 2022 e não
+      se recupera; a cauda acima de 60 dias mais que dobra até 2026.</figcaption>
+    </figure>
+    <div class="alerta">
+      <b>Uma defasagem que muda é pior que uma defasagem grande.</b> Se o atraso fosse constante,
+      ele apenas deslocaria a série inteira, e bastaria uma análise de sensibilidade empurrando os
+      marcos para frente. Como ele muda, a deformação é não uniforme: quando o processamento
+      desacelera, exames coletados no período são empurrados para competências posteriores,
+      deprimindo a competência corrente e inflando a seguinte. A quebra de 2022 cai dentro do
+      segmento que serve de base para extrapolar o contrafactual de τ3 — o efeito de maior
+      interesse do estudo. Nenhum dos quatro avaliadores do pré-projeto previu isto.
+    </div>
+  </div>
+</section>
+
+<section>
   <h2>Fontes de dados</h2>
   <p class="note">Todas as fontes são públicas e o acesso é programático e reprodutível. Os comandos
   abaixo são os efetivamente usados pelo pipeline, verificados em 1º de agosto de 2026.</p>
@@ -709,6 +815,56 @@ localidades/estados/26/municipios</code>
   </div>
 </section>
 
+<section>
+  <h2>Documentação e reprodutibilidade</h2>
+  <p class="note">Todo o material de método, validação e auditoria é público. Os documentos abaixo
+  registram tanto o que funcionou quanto o que foi descartado, e por quê.</p>
+  <div class="fontes">
+    <div class="fonte">
+      <div class="papel">Pipeline</div>
+      <h3>Coleta reprodutível</h3>
+      <p>Um script monta o painel a partir das fontes oficiais, com verificação de saída embutida.
+      Roda em minutos e não depende de navegador.</p>
+      <code>python3 pipeline.py</code>
+    </div>
+    <div class="fonte">
+      <div class="papel">Validação de fontes</div>
+      <h3>Por que o SIA foi descartado</h3>
+      <p>Registro das medições que eliminaram o SIA-SUS como fonte do desfecho e das armadilhas do
+      TABNET que produzem dados errados em silêncio.</p>
+      <code>docs/ACHADOS_VALIDACAO_SIA.md</code>
+    </div>
+    <div class="fonte">
+      <div class="papel">Eixo temporal</div>
+      <h3>Defasagem e composição</h3>
+      <p>A medição da defasagem entre coleta e liberação, sua variação ao longo da janela, e a
+      composição do desfecho por motivo do exame.</p>
+      <code>docs/ACHADOS_EIXO_TEMPORAL_E_MOTIVO.md</code>
+    </div>
+    <div class="fonte">
+      <div class="papel">Literatura</div>
+      <h3>Dossiê auditado</h3>
+      <p>Sete eixos temáticos com cada citação verificada de forma independente. Dezoito
+      referências e premissas foram refutadas e estão listadas.</p>
+      <code>docs/pesquisa/ALERTAS_AUDITORIA.md</code>
+    </div>
+    <div class="fonte">
+      <div class="papel">Projeto</div>
+      <h3>Pré-projeto e resposta à banca</h3>
+      <p>O pré-projeto e o registro de como cada apontamento de quatro avaliadores independentes
+      foi tratado — nove fatais e vinte e sete graves.</p>
+      <code>docs/preprojeto/</code>
+    </div>
+    <div class="fonte">
+      <div class="papel">Histórico</div>
+      <h3>O que deu errado antes</h3>
+      <p>Os parâmetros do TABNET e o diagnóstico do pipeline anterior, que produzia uma série
+      artefatual a partir do procedimento e da agregação errados.</p>
+      <code>docs/HISTORICO_TENTATIVAS.md</code>
+    </div>
+  </div>
+</section>
+
 <footer>
   <p>Estudo ecológico de séries temporais interrompidas em painel de municípios. Dissertação de
   mestrado em Saúde Coletiva. Os dados agregados, o pipeline de coleta e a documentação
@@ -722,6 +878,28 @@ localidades/estados/26/municipios</code>
   document.getElementById('c-razao').appendChild(razaoAnual(d));
   document.getElementById('c-ctrl').appendChild(desfechoControle(d));
   document.getElementById('c-dist').appendChild(distribuicaoMunicipal(d));
+
+  const q = d.qualidade || {};
+  const RAMPA = ['var(--seq-250)', 'var(--seq-450)', 'var(--seq-650)'];
+  if (q.motivo) {
+    // 98% em todas as barras não é um gráfico: são três números. Stat tiles.
+    const cats = q.motivo.categorias;
+    const soma = c => Object.values(cats[c] || {}).reduce((a, b) => a + b, 0);
+    const total = Object.keys(cats).reduce((s, c) => s + soma(c), 0);
+    const ordem = Object.keys(cats).sort((a, b) => soma(b) - soma(a));
+    document.getElementById('c-motivo').innerHTML = ordem.map(c => {
+      const v = soma(c);
+      return `<div class="kpi"><div class="label">${c.replace(/\s*\(.*/, '')}</div>
+        <div class="value">${fmt2(100 * v / total)}<span style="font-size:17px;color:var(--muted)">%</span></div>
+        <div class="foot">${fmt(v)} exames</div></div>`;
+    }).join('');
+  }
+  if (q.tempo_liberacao) {
+    const ordem = ['Até 30 dias', '31 - 60 dias', 'mais de 60'];
+    const cats = Object.keys(q.tempo_liberacao.categorias);
+    document.getElementById('c-tempo').appendChild(
+      composicaoPorAno(q.tempo_liberacao, ordem.filter(o => cats.includes(o)), RAMPA, 0));
+  }
 }
 
 (async () => {

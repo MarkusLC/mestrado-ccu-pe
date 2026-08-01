@@ -450,9 +450,11 @@ def razao_de_exames(painel, ano):
 
 MARCOS = [
     {"id": "τ1", "mes": "2020-01", "rotulo": "Previne Brasil",
-     "detalhe": "Portaria GM/MS 2.979 de 12/11/2019"},
+     "detalhe": "Portaria GM/MS 2.979 de 12/11/2019 — não separável de τ2, modelado em bloco"},
     {"id": "τ2", "mes": "2020-03", "rotulo": "COVID-19",
      "detalhe": "Emergência de Saúde Pública de Importância Nacional"},
+    {"id": "τ2b", "mes": "2021-01", "rotulo": "Recuperação pós-pandêmica",
+     "detalhe": "Ponto de recuperação epidemiológica, não marco normativo — nenhum efeito de política lhe é atribuído"},
     {"id": "τ3", "mes": "2024-05", "rotulo": "Saúde Brasil 360",
      "detalhe": "Componente financeiro — Portaria GM/MS 3.493/2024, art. 8º"},
     {"id": "τ4", "mes": "2025-05", "rotulo": "Indicador C7 mensurado",
@@ -460,6 +462,58 @@ MARCOS = [
     {"id": "τ5", "mes": "2026-05", "rotulo": "Qualidade parcial",
      "detalhe": "Portaria GM/MS 10.994/2026 — implantação assimétrica, só ganho"},
 ]
+
+
+def tabula_por_ano(linha_val, rotulo):
+    """Tabulação auxiliar: uma dimensão qualitativa × ano de competência.
+
+    Serve às medidas de qualidade que o painel declara — composição do desfecho
+    por motivo do exame e tempo até a liberação do laudo.
+    """
+    pares = [
+        ("Linha", linha_val),
+        ("Coluna", "Ano competencia|CO_ANO_LIBERACAO|1|CITO\\ano.cnv"),
+        ("Incremento", "Exames|=count(*)"),
+    ]
+    pares += [("PAno competencia", f"{a}|{a}|4") for a in ANOS]
+    pares += [
+        ("SMunic.de residencia", "TODAS_AS_CATEGORIAS__"),
+        ("SMes/Ano competencia", "TODAS_AS_CATEGORIAS__"),
+        ("XSexo", "Feminino|F|1"),
+    ]
+    pares += [("XFaixa etária", f) for f in FAIXAS]
+    pares += [
+        ("XMotivo do exame", "TODAS_AS_CATEGORIAS__"),
+        ("grafico", ""), ("nomedef", DEF_CITO),
+        ("formato", "table"), ("mostre", "sim"),
+    ]
+    corpo = urllib.parse.urlencode(pares, encoding="latin-1", errors="replace").encode("ascii")
+    html = _req(f"{CGI}/webtabx.exe?{DEF_CITO}", corpo).decode("latin-1")
+    link = re.search(r"csv/[A-Za-z_0-9]+\.csv", html)
+    if not link:
+        return None
+    texto = _req(f"{CGI}/{link.group(0)}").decode("latin-1")
+
+    import html as htmlmod
+    cabecalho, linhas = None, {}
+    for l in texto.splitlines():
+        l = htmlmod.unescape(l)
+        if ";" not in l:
+            continue
+        campos = [c.strip().strip('"') for c in l.split(";")]
+        if cabecalho is None:
+            cabecalho = [c.strip() for c in campos]
+            continue
+        if campos[0].lower().startswith(("total", "fonte")):
+            continue
+        vals = {}
+        for i, v in enumerate(campos[1:], start=1):
+            if i >= len(cabecalho) or cabecalho[i].lower() in ("total", ""):
+                continue
+            n = v.replace(".", "").strip()
+            vals[cabecalho[i]] = int(n) if n.isdigit() else 0
+        linhas[campos[0]] = vals
+    return {"rotulo": rotulo, "categorias": linhas}
 
 
 def gera_dashboard(painel, resumo):
@@ -509,9 +563,29 @@ def gera_dashboard(painel, resumo):
         })
     municipios.sort(key=lambda x: -x["razao"])
 
+    # Tabulações de qualidade. Ficam em cache: mudam pouco e cada uma custa uma
+    # requisição lenta ao TABNET.
+    cache_q = DADOS / "qualidade.json"
+    if cache_q.exists():
+        qualidade = json.loads(cache_q.read_text())
+    else:
+        qualidade = {}
+        for chave, val, rot in [
+            ("motivo", "Motivo do exame|TP_MOTIVO_EXAME|1|CITO\\motivo_exame.cnv",
+             "Motivo do exame"),
+            ("tempo_liberacao", "Tempo Exame|CO_TEMPO_EXAME|1|CITO\\TempoExame.CNV",
+             "Tempo entre a coleta e a liberação do laudo"),
+        ]:
+            print(f"  qualidade: {chave}...", end=" ", flush=True)
+            r = tabula_por_ano(val, rot)
+            qualidade[chave] = r
+            print("ok" if r else "falhou")
+        cache_q.write_text(json.dumps(qualidade, ensure_ascii=False, indent=1))
+
     dash = {
         "meses": meses,
         "series": {s: [series_mes[s].get(m, 0) for m in meses] for s in series_mes},
+        "qualidade": qualidade,
         "razao_mensal": razao_mes,
         "razao_anual": resumo["razao_de_exames_por_ano"],
         "municipios": municipios,
