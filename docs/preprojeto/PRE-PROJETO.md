@@ -12,7 +12,7 @@
 
 **Ano:** 2026 (ingresso em 2027)
 
-**Título:** Cobertura de exames citopatológicos do câncer do colo do útero nos municípios de Pernambuco durante a transição Previne Brasil → Saúde Brasil 360: estudo ecológico de séries temporais interrompidas
+**Título:** Produção de exames citopatológicos do câncer do colo do útero nos municípios de Pernambuco durante a transição Previne Brasil → Saúde Brasil 360: estudo ecológico de séries temporais interrompidas
 
 ---
 
