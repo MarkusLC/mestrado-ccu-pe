@@ -765,12 +765,26 @@ localidades/estados/26/municipios</code>
   <details>
     <summary>Por que o SIA-SUS não é a fonte do desfecho</summary>
     <p class="note" style="margin-top:10px">O Sistema de Informações Ambulatoriais registra a
-    produção faturada de citopatologia e seria uma via mais simples. Ele foi descartado por
-    evidência empírica: a distribuição etária da produção de citopatológico no SIA em Pernambuco,
-    em 2025, aloca 43% dos exames em mulheres de 20 a 24 anos, 19% em 65 a 69 anos, e apenas 9%
-    na faixa-alvo inteira de 25 a 64. Um programa de rastreamento indicado para 25 a 64 anos não
-    produz essa distribuição — o campo de idade do SIA está inutilizável para o recorte que o
-    desfecho exige. O SIA permanece útil apenas como verificação externa de ordem de grandeza.</p>
+    produção faturada de citopatologia e seria uma via mais simples. Foi descartado por duas
+    razões, e a segunda é a que decide.</p>
+    <p class="note">A primeira é empírica: a distribuição etária da produção de citopatológico no
+    SIA em Pernambuco, em 2025, aloca 43% dos exames em mulheres de 20 a 24 anos, 19% em 65 a 69,
+    e apenas 9% na faixa-alvo inteira de 25 a 64. Um programa indicado para 25 a 64 anos não
+    produz essa distribuição — o campo de idade está inutilizável para o recorte que o desfecho
+    exige.</p>
+    <p class="note">A segunda é de validade, e vale independentemente da primeira. O SIA mede
+    <b>faturamento</b>; o SISCAN mede <b>laudo</b>. Não são o mesmo universo: o SIA capta entre 78%
+    e 86% do volume do SISCAN conforme a competência, e essa diferença é função de
+    contratualização, glosa e regra de pagamento. Como três dos marcos temporais do estudo são
+    intervenções financeiras, usar uma série de faturamento para medir efeito de mudança no
+    financiamento cria confundimento alinhado às datas de interrupção: um degrau em maio de 2024
+    seria indistinguível entre mais mulheres rastreadas e municípios faturando melhor porque
+    aquilo passou a valer dinheiro. É problema de fonte, não de estimador — nenhuma especificação
+    de modelo o resolve.</p>
+    <p class="note">O SIA permanece útil como verificação externa de ordem de grandeza. A própria
+    razão entre as duas séries é informativa: se ela saltar numa data de interrupção, isso é
+    evidência de mudança no comportamento de faturamento — o confundimento que se quis evitar,
+    agora observável em vez de escondido.</p>
   </details>
 </section>
 
@@ -833,6 +847,13 @@ localidades/estados/26/municipios</code>
       <p>Registro das medições que eliminaram o SIA-SUS como fonte do desfecho e das armadilhas do
       TABNET que produzem dados errados em silêncio.</p>
       <code>docs/ACHADOS_VALIDACAO_SIA.md</code>
+    </div>
+    <div class="fonte">
+      <div class="papel">Aquisição</div>
+      <h3>Plano de aquisição verificado</h3>
+      <p>Oito fontes sondadas, cada uma submetida a verificação adversarial independente que
+      reproduziu os bytes. Onde sondagem e verificação divergiram, prevalece a verificação.</p>
+      <code>docs/fontes/PLANO_AQUISICAO.md</code>
     </div>
     <div class="fonte">
       <div class="papel">Eixo temporal</div>
