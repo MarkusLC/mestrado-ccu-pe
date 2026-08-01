@@ -166,6 +166,50 @@ details[open] summary { margin-bottom: 12px; }
 a { color: var(--s1); }
 footer { border-top: 1px solid var(--border); padding-top: 20px; font-size: 13px; color: var(--text-secondary); }
 .err { padding: 40px; text-align: center; color: var(--text-secondary); }
+
+/* navegação por abas */
+.abas {
+  display: flex; gap: 4px; border-bottom: 1px solid var(--border);
+  margin: 0 0 32px; flex-wrap: wrap;
+}
+.aba {
+  appearance: none; background: none; border: none; cursor: pointer;
+  font: inherit; font-size: 14px; font-weight: 550; color: var(--text-secondary);
+  padding: 10px 16px; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color .12s, border-color .12s;
+}
+.aba:hover { color: var(--text-primary); }
+.aba[aria-selected="true"] { color: var(--s1); border-bottom-color: var(--s1); }
+.aba:focus-visible { outline: 2px solid var(--s1); outline-offset: -2px; border-radius: 4px; }
+.painel[hidden] { display: none; }
+
+/* tabela completa: cabeçalho fixo e ordenação */
+.tabela-wrap { max-height: 620px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+.tabela-wrap table { font-size: 13px; }
+.tabela-wrap thead th {
+  position: sticky; top: 0; background: var(--surface-1); z-index: 1;
+  cursor: pointer; user-select: none; white-space: nowrap;
+}
+.tabela-wrap thead th:hover { color: var(--text-primary); }
+.tabela-wrap thead th::after { content: ''; display: inline-block; width: 12px; }
+.tabela-wrap thead th[data-ord="asc"]::after { content: ' ↑'; }
+.tabela-wrap thead th[data-ord="desc"]::after { content: ' ↓'; }
+.tabela-wrap tbody tr:hover { background: var(--plane); }
+.busca {
+  width: 100%; max-width: 320px; padding: 8px 12px; font: inherit; font-size: 14px;
+  border: 1px solid var(--border); border-radius: 7px; background: var(--surface-1);
+  color: var(--text-primary); margin-bottom: 14px;
+}
+.busca:focus { outline: 2px solid var(--s1); outline-offset: -1px; }
+.barra { display: inline-block; height: 8px; border-radius: 2px; background: var(--seq-450); vertical-align: middle; }
+.contagem { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+.baixar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.baixar a {
+  display: inline-block; padding: 8px 14px; border: 1px solid var(--border);
+  border-radius: 7px; font-size: 13px; text-decoration: none; background: var(--surface-1);
+}
+.baixar a:hover { border-color: var(--s1); }
+.baixar a small { display: block; color: var(--muted); font-size: 11.5px; }
 @media (max-width: 640px) {
   h1 { font-size: 23px; }
   .hero .fig { font-size: 42px; }
@@ -572,6 +616,103 @@ function tabelaMunicipios(d) {
     <tbody>${corpo}</tbody></table>`;
 }
 
+/* Abas. O hash da URL guarda a seleção, para que um link possa apontar
+   direto para os dados ou para os documentos. */
+function montaAbas() {
+  const abas = [...document.querySelectorAll('.aba')];
+  const seleciona = id => {
+    abas.forEach(a => {
+      const ativa = a.id === id;
+      a.setAttribute('aria-selected', ativa);
+      document.getElementById(a.getAttribute('aria-controls')).hidden = !ativa;
+    });
+    history.replaceState(null, '', '#' + id.slice(2));
+  };
+  abas.forEach(a => {
+    a.addEventListener('click', () => seleciona(a.id));
+    a.addEventListener('keydown', ev => {
+      const i = abas.indexOf(a);
+      if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') {
+        ev.preventDefault();
+        const prox = abas[(i + (ev.key === 'ArrowRight' ? 1 : abas.length - 1)) % abas.length];
+        prox.focus(); seleciona(prox.id);
+      }
+    });
+  });
+  const alvo = 't-' + location.hash.slice(1);
+  if (abas.some(a => a.id === alvo)) seleciona(alvo);
+}
+
+function montaTabelaMunicipios(d) {
+  const tab = document.getElementById('tab-mun');
+  const tbody = tab.querySelector('tbody');
+  const busca = document.getElementById('busca-mun');
+  const contagem = document.getElementById('contagem-mun');
+  const maxRazao = Math.max(...d.municipios.map(m => m.razao));
+  // posição na ordenação original (por razão, decrescente) — não muda ao reordenar
+  const base = d.municipios.map((m, i) => ({...m, pos: i + 1}));
+  let col = 'razao', dir = -1;
+
+  const desenha = () => {
+    const q = busca.value.trim().toLowerCase();
+    const linhas = base
+      .filter(m => !q || m.nome.toLowerCase().includes(q) || m.cod.includes(q))
+      .sort((a, b) => {
+        const x = a[col], y = b[col];
+        return (typeof x === 'string' ? x.localeCompare(y, 'pt-BR') : x - y) * dir;
+      });
+    tbody.innerHTML = linhas.map(m => `<tr>
+      <td class="num" style="color:var(--muted)">${m.pos}</td>
+      <td>${m.nome}</td>
+      <td class="num" style="color:var(--muted)">${m.cod}</td>
+      <td class="num"><b>${fmt3(m.razao)}</b></td>
+      <td class="num">${fmt(m.exames)}</td>
+      <td class="num">${fmt(m.pop)}</td>
+      <td><span class="barra" style="width:${(m.razao / maxRazao * 60).toFixed(1)}px"></span></td>
+    </tr>`).join('');
+    contagem.textContent = q
+      ? `${linhas.length} de ${base.length} municípios`
+      : `${base.length} municípios · ano de referência ${d.ano_referencia}`;
+  };
+
+  tab.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const c = th.dataset.col;
+      dir = col === c ? -dir : (c === 'nome' ? 1 : -1);
+      col = c;
+      tab.querySelectorAll('th').forEach(o => o.removeAttribute('data-ord'));
+      th.dataset.ord = dir === 1 ? 'asc' : 'desc';
+      desenha();
+    });
+  });
+  busca.addEventListener('input', desenha);
+  desenha();
+}
+
+function montaTabelaSeries(d) {
+  const invalidas = new Set(d.competencias_invalidas);
+  const marcos = Object.fromEntries(d.marcos.map(m => [m.mes, m]));
+  document.querySelector('#tab-series tbody').innerHTML = d.meses.map((m, i) => {
+    const ausente = invalidas.has(m);
+    const provisoria = m >= d.provisorio_a_partir_de;
+    const marco = marcos[m];
+    const sit = [
+      ausente ? '<b>sem dado</b>' : null,
+      provisoria && !ausente ? 'provisória' : null,
+      marco ? `<b>${marco.id}</b> ${marco.rotulo}` : null,
+    ].filter(Boolean).join(' · ');
+    const cel = v => ausente ? '—' : fmt(v);
+    return `<tr${ausente ? ' style="color:var(--muted)"' : ''}>
+      <td>${rotuloMes(m)}</td>
+      <td class="num">${cel(d.series.citopatologico[i])}</td>
+      <td class="num">${ausente ? '—' : fmt3(d.razao_mensal[i])}</td>
+      <td class="num">${cel(d.series.cito_controle_fora_faixa?.[i])}</td>
+      <td class="num">${cel(d.series.mamografia?.[i])}</td>
+      <td style="font-size:12.5px;color:var(--text-secondary)">${sit}</td>
+    </tr>`;
+  }).join('');
+}
+
 function render(d) {
   const r = d.resumo;
   const ultRazao = d.razao_anual[d.ano_referencia];
@@ -591,6 +732,14 @@ function render(d) {
   <span class="tag">${r.primeira_competencia} a ${r.ultima_competencia}</span>
   <span class="tag">Atualizado em ${d.gerado_em}</span>
 </header>
+
+<div class="abas" role="tablist">
+  <button class="aba" role="tab" id="t-painel" aria-controls="p-painel" aria-selected="true">Painel</button>
+  <button class="aba" role="tab" id="t-dados" aria-controls="p-dados" aria-selected="false">Dados completos</button>
+  <button class="aba" role="tab" id="t-docs" aria-controls="p-docs" aria-selected="false">Documentos</button>
+</div>
+
+<div class="painel" id="p-painel" role="tabpanel" aria-labelledby="t-painel">
 
 <section>
   <div class="hero">
@@ -845,8 +994,114 @@ localidades/estados/26/municipios</code>
   </div>
 </section>
 
-<section>
-  <h2>Documentação e reprodutibilidade</h2>
+</div><!-- /p-painel -->
+
+<div class="painel" id="p-dados" role="tabpanel" aria-labelledby="t-dados" hidden>
+  <section>
+    <h2>Razão de exames por município</h2>
+    <p class="note">Os ${r.municipios} municípios de Pernambuco em ${d.ano_referencia}, com a
+    contagem de exames, a população-alvo e a razão resultante. Clique num cabeçalho para ordenar;
+    use a busca para filtrar por nome ou por código do IBGE.</p>
+    <input class="busca" id="busca-mun" type="search" placeholder="Filtrar município ou código…"
+           aria-label="Filtrar municípios">
+    <div class="tabela-wrap">
+      <table id="tab-mun">
+        <thead><tr>
+          <th data-col="pos" class="num">#</th>
+          <th data-col="nome">Município</th>
+          <th data-col="cod" class="num">IBGE</th>
+          <th data-col="razao" class="num" data-ord="desc">Razão</th>
+          <th data-col="exames" class="num">Exames</th>
+          <th data-col="pop" class="num">Mulheres 25–64</th>
+          <th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="contagem" id="contagem-mun"></p>
+  </section>
+
+  <section>
+    <h2>Baixar os dados</h2>
+    <p class="note">Tudo em formato aberto, sem cadastro. O painel completo (município × mês ×
+    faixa etária, cerca de 340 mil linhas) não é versionado por tamanho — é reproduzido em minutos
+    rodando <code>python3 pipeline.py</code>.</p>
+    <div class="baixar">
+      <a href="data/dashboard.json" download>dashboard.json
+        <small>séries mensais, municípios e marcos</small></a>
+      <a href="data/resumo.json" download>resumo.json
+        <small>metadados e razão anual</small></a>
+      <a href="data/qualidade.json" download>qualidade.json
+        <small>motivo do exame e tempos de liberação</small></a>
+      <a href="data/populacao_pe.json" download>populacao_pe.json
+        <small>denominador por município, ano e faixa</small></a>
+      <a href="https://github.com/MarkusLC/mestrado-ccu-pe">repositório
+        <small>pipeline, documentação e histórico</small></a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Séries mensais completas</h2>
+    <p class="note">As três séries do estudo, agregadas para o estado, competência a competência.
+    As competências sem dado aparecem em branco: agosto e setembro de 2022 não foram processados
+    pelo SISCAN em nenhuma unidade da federação.</p>
+    <div class="tabela-wrap">
+      <table id="tab-series">
+        <thead><tr>
+          <th>Competência</th>
+          <th class="num">Citopatológico 25–64</th>
+          <th class="num">Razão</th>
+          <th class="num">Fora da faixa</th>
+          <th class="num">Mamografia 50–69</th>
+          <th>Situação</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div><!-- /p-dados -->
+
+<div class="painel" id="p-docs" role="tabpanel" aria-labelledby="t-docs" hidden>
+  <section>
+    <h2>Documentos do projeto no Drive</h2>
+    <p class="note">Pré-projeto, correções metodológicas e pendências, em documentos editáveis.
+    O acesso depende de permissão concedida pelo proprietário da pasta.</p>
+    <div class="fontes">
+      <div class="fonte">
+        <div class="papel">Metodologia</div>
+        <h3><a href="https://docs.google.com/document/d/19P9q4mnAo4kCVrW__jcDY7lU4DYpH-Oo2y5fjmrJe1A/edit">Correções à metodologia</a></h3>
+        <p>O que a auditoria normativa, a validação de fontes e a banca mudaram desde o parecer
+        original de julho: a hipótese sobre o C7, o descarte da mamografia como controle, os cinco
+        marcos revisados e as correções ao modelo.</p>
+      </div>
+      <div class="fonte">
+        <div class="papel">Submissão</div>
+        <h3><a href="https://docs.google.com/document/d/1NtLcgTcU1rkySAv71mNbeAxdxO_86u1Zkjmp93tfaXQ/edit">Pré-projeto — Fiocruz IAM</a></h3>
+        <p>Versão para o Instituto Aggeu Magalhães, na estrutura do Anexo VI. Seis das dez páginas
+        permitidas.</p>
+      </div>
+      <div class="fonte">
+        <div class="papel">Submissão</div>
+        <h3><a href="https://docs.google.com/document/d/1polb3dtNYIs7dHPk2YJQZ-VZf-oNZWC5kcGH6n6_0E4/edit">Pré-projeto — UPE, anônima</a></h3>
+        <p>Versão para o mestrado profissional do PPGSC/FCM/UPE, sem traço identificador, para
+        avaliação cega. Seis das seis páginas.</p>
+      </div>
+      <div class="fonte">
+        <div class="papel">Checklist</div>
+        <h3><a href="https://docs.google.com/document/d/15CkA8loHI6DI95WP38P4vBBBX-s07_F6bzqVwDjRWDw/edit">Pendências antes do envio</a></h3>
+        <p>O que ainda depende de decisão da candidata ou de consulta às secretarias — incluindo a
+        indicação de orientador, cuja omissão impede a homologação da inscrição.</p>
+      </div>
+      <div class="fonte">
+        <div class="papel">Pasta</div>
+        <h3><a href="https://drive.google.com/drive/folders/1sG2y6KngsXDt8EzzELf2Xz4AHsMIRlV5">Mestrado CCU-PE no Drive</a></h3>
+        <p>Todos os documentos acima, no mesmo lugar.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Documentação técnica no repositório</h2>
   <p class="note">Todo o material de método, validação e auditoria é público. Os documentos abaixo
   registram tanto o que funcionou quanto o que foi descartado, e por quê.</p>
   <div class="fontes">
@@ -901,6 +1156,7 @@ localidades/estados/26/municipios</code>
     </div>
   </div>
 </section>
+</div><!-- /p-docs -->
 
 <footer>
   <p>Estudo ecológico de séries temporais interrompidas em painel de municípios. Dissertação de
@@ -910,6 +1166,10 @@ localidades/estados/26/municipios</code>
   <p>Dados públicos do DATASUS e do IBGE. Última atualização do painel em ${d.gerado_em}.
   Última competência disponível: ${rotuloMes(r.ultima_competencia)}.</p>
 </footer>`;
+
+  montaAbas();
+  montaTabelaMunicipios(d);
+  montaTabelaSeries(d);
 
   document.getElementById('c-serie').appendChild(serieTemporal(d));
   document.getElementById('c-razao').appendChild(razaoAnual(d));
