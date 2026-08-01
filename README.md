@@ -1,154 +1,94 @@
-# Mestrado — Cobertura de Rastreamento do CCU em Pernambuco
+# Rastreamento do câncer do colo do útero em Pernambuco
 
-**Estudo ecológico de série temporal: Previne Brasil → Saúde Brasil 360**
+Dados e pipeline de um **estudo ecológico de séries temporais interrompidas** sobre a cobertura de
+exames citopatológicos do colo do útero nos municípios de Pernambuco, durante a transição do modelo
+de cofinanciamento federal da Atenção Primária: **Previne Brasil → Saúde Brasil 360**.
 
-## 📊 O que é
+Painel público: **https://markuslc.github.io/mestrado-ccu-pe/**
 
-Repositório que automatiza:
+## O que está aqui
 
-1. **Coleta de dados SISCAN** (citopatológico) via [microdatasus](https://github.com/rfsaldanha/microdatasus)
-2. **Processamento e agregação** por município e mês (2018–2026)
-3. **GitHub Actions** que roda automaticamente no dia 15 de cada mês
-4. **Dashboard ao vivo** que consome os dados agregados em JSON
+| Arquivo | Conteúdo |
+|---------|----------|
+| `pipeline.py` | Coleta e monta o painel município × mês × faixa etária, com denominador populacional |
+| `index.html` | Painel de dados, sem dependências externas, consome `data/dashboard.json` |
+| `data/dashboard.json` | Agregado que alimenta o painel (24 KB) |
+| `data/resumo.json` | Metadados da extração: totais, cobertura, competências |
+| `data/populacao_pe.json` | Denominador: população feminina por município, ano e faixa quinquenal |
+| `docs/` | Documentação metodológica e histórico técnico |
 
-Tudo versionado, reprodutível e **completamente gratuito**.
-
----
-
-## 🚀 Como funciona
-
-### Fluxo Automático
-
-```
-GitHub Actions (cron 15º dia)
-  ↓
-fetch_siscan.R (R script)
-  ↓
-Puxa via microdatasus
-  ↓
-Processa + agrega JSON
-  ↓
-Faz commit + push automático
-  ↓
-Dashboard lê dados (raw.githubusercontent.com)
-```
-
-### Arquivos
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `.github/workflows/update-siscan.yml` | GitHub Actions workflow (roda dia 15) |
-| `fetch_siscan.R` | Script R que puxa + processa dados |
-| `dashboard_mestrado.html` | Dashboard estático com Plotly.js |
-| `data/siscan_agregado.json` | Dados agregados por município/mês |
-| `data/siscan_summary.json` | Resumo: total, período, data |
-
----
-
-## 📈 Dashboard
-
-Acesse:  
-👉 **[dashboard_mestrado.html](./dashboard_mestrado.html)** (abra no navegador)
-
-Ou veja em tempo real (quando os dados são atualizados):  
-👉 **[GitHub Pages](#)** (configurar em Settings → Pages)
-
-### O que o dashboard mostra
-
-- **📊 Resumo**: Total de exames, municípios, período coberto
-- **📈 Série Temporal**: Gráfico mensal agregado de PE (2018–2026)
-- **🗺️ Por Município**: Top 15 municípios por total de exames
-- **🔬 Metodologia**: Delineamento, marcos temporais, links para documentação
-
----
-
-## 🔧 Setup Local (Opcional)
-
-Se quiser testar o script R localmente antes de fazer push:
+## Rodar
 
 ```bash
-# Instalar dependências R
-install.packages(c('renv', 'jsonlite', 'dplyr', 'tidyr'))
-remotes::install_github('rfsaldanha/microdatasus')
-
-# Rodar script
-Rscript fetch_siscan.R
-
-# Resultado
-# data/siscan_agregado.json (dados brutos agregados)
-# data/siscan_summary.json (metadados)
+python3 -m venv venv && source venv/bin/activate
+pip install dbfread
+python3 pipeline.py          # baixa o que falta e monta o painel
+python3 pipeline.py --check  # só o self-check, sem rede
 ```
 
----
+A primeira execução baixa cerca de 240 MB do DATASUS (estimativas populacionais) e leva alguns
+minutos. As seguintes reaproveitam o cache em `data/bruto/`, que não é versionado.
 
-## 📅 Agendamento
+Saída: `data/painel_ccu_pe.csv` (340 mil linhas, o painel para análise em R) mais os agregados
+versionados.
 
-O workflow roda automaticamente:
+## Desenho do estudo
 
-- **Quando**: 15º dia de cada mês, às 12h UTC
-- **O que**: Executa `fetch_siscan.R`, faz commit + push
-- **Histórico**: Todos os commits ficam versionados (ver branch history)
+- **Delineamento**: ecológico, séries temporais interrompidas em painel de municípios
+- **Unidade de análise**: município — 185 unidades de PE, incluindo Fernando de Noronha
+- **Janela**: jan/2018 a dez/2026 (108 meses); coleta definitiva em 2027
+- **Desfecho**: contagem mensal de exames citopatológicos em mulheres de 25 a 64 anos, por município
+  de **residência**
+- **Offset**: log(população feminina da faixa ÷ 3) — fator de divisão trienal da Resolução CIT nº 2/2016
+- **Modelo**: GLMM binomial negativo (`glmmTMB`), efeitos aleatórios por município, AR1
+  intra-município, harmônicos de Fourier
 
-**Trigger manual**: Você pode rodar manualmente em Actions → update-siscan → Run workflow
+### Marcos temporais modelados
 
----
+| τ | Competência | Evento |
+|---|-------------|--------|
+| τ1 | jan/2020 | Previne Brasil — Portaria GM/MS 2.979 de 12/11/2019 |
+| τ2 | mar/2020 | Emergência de Saúde Pública, COVID-19 |
+| τ3 | mai/2024 | Componente financeiro do Saúde Brasil 360 — Portaria GM/MS 3.493/2024, art. 8º |
+| τ4 | mai/2025 | Mensuração do indicador C7 — Portaria GM/MS 6.907/2025 |
+| τ5 | mai/2026 | Implantação parcial e assimétrica da qualidade — Portaria GM/MS 10.994/2026 |
 
-## 🔗 Documentação Completa
+τ1 e τ2 estão separados por dois meses e provavelmente não são separáveis empiricamente; a
+estratégia declarada a priori é modelá-los como bloco único, com sensibilidade deslocando τ1 para
+jan/2019.
 
-- **Parecer Metodológico**: [Google Docs](https://docs.google.com/document/d/1jcGEAaTNBLJEoX0DoEaFsomhho6ieFM1SUYsF-pD4sQ/edit)
-- **Seção Métodos**: [Google Docs](https://docs.google.com/document/d/1wGtMpaSoXrTcrNe0BJx3CMJyICIFQW47-rFM7xCqO14/edit)
-- **Dashboard Completo**: [HTML](./dashboard_mestrado.html)
+## Fontes
 
----
+| Fonte | Papel | Acesso |
+|-------|-------|--------|
+| SISCAN | Desfecho | TABNET/DATASUS, `SISCAN/cito_colo_residpe.def`, por POST |
+| POPSVS (SVS/MS + IBGE) | Denominador | FTP DATASUS, `/dissemin/publicos/IBGE/POPSVS/` |
+| IBGE Localidades | Frame territorial | API de localidades, UF 26 |
+| SISCAN mamografia | Série-controle | `SISCAN/mamografia_residpe.def` |
 
-## ⚠️ Limitações Conhecidas
+## Três coisas que não são óbvias
 
-1. **Lag natural**: DATASUS publica dados com ~30-60 dias de atraso
-2. **Incompletude**: Nem todos os municípios alimentam o SISCAN
-3. **Sem suporte oficial**: DATASUS não documenta acesso programático; workflow pode quebrar se layout do TabNet mudar
-4. **Estrutura microdatasus**: O script assume estrutura SIA padrão; verificar output em caso de erro
+**O SIA-SUS não serve como fonte do desfecho.** A distribuição etária da produção de citopatológico
+no SIA em PE aloca 43% dos exames em mulheres de 20 a 24 anos e apenas 9% na faixa-alvo de 25 a 64 —
+um programa indicado para 25 a 64 anos não produz essa distribuição. O campo de idade está
+inutilizável para o recorte que o desfecho exige. Detalhes em
+[`docs/ACHADOS_VALIDACAO_SIA.md`](docs/ACHADOS_VALIDACAO_SIA.md).
 
----
+**Agosto e setembro de 2022 são ausências, não zeros.** O SISCAN não processou dados em nenhuma
+unidade da federação em agosto de 2022, e setembro recebeu o transbordo. Nenhuma série real de
+rastreamento zera nacionalmente por um mês.
 
-## 📝 Para Dissertação
+**O TABNET omite a linha do município que zera no estrato.** Sem preencher zeros contra um frame
+canônico de 185 códigos, um zero verdadeiro vira ausência e o modelo de contagem enviesa para cima.
 
-Este repositório é **reprodutível 100%**:
+## Documentação
 
-- ✅ Código R versionado
-- ✅ Dependências em renv.lock
-- ✅ Automação via GitHub Actions (sem setup manual)
-- ✅ Dados e metadados versionados (git blame mostra datas exatas)
+- [`docs/ACHADOS_VALIDACAO_SIA.md`](docs/ACHADOS_VALIDACAO_SIA.md) — validação empírica das fontes
+- [`docs/HISTORICO_TENTATIVAS.md`](docs/HISTORICO_TENTATIVAS.md) — parâmetros do TABNET e o que deu
+  errado no pipeline anterior
+- [`docs/pesquisa/`](docs/pesquisa/) — dossiê de literatura auditado e alertas normativos
+- [`docs/preprojeto/`](docs/preprojeto/) — pré-projeto de mestrado
 
-**Cite no apêndice:**
+## Licença
 
-> Dados de rastreamento do câncer do colo do útero foram obtidos via SISCAN (DATASUS) usando o pacote R `microdatasus`. O pipeline de processamento e agregação está documentado no repositório GitHub: https://github.com/MarkusLC/mestrado-ccu-pe
-
----
-
-## 🛠️ Troubleshooting
-
-### "GitHub Actions falhou"
-
-1. Vá em **Actions** → **update-siscan** → último run
-2. Clique em **fetch-and-commit**
-3. Veja o log de erro em **Run R dependencies**
-
-### "Dashboard mostra 'Dados ainda não disponíveis'"
-
-- Primeira execução do Actions? Espere até o dia 15, ou dispare manualmente em Actions → Run workflow
-- GitHub Actions demora ~2-3 min para executar
-
-### "JSON não carrega"
-
-- Os dados só aparecem **após o primeiro push** do Actions
-- Aguarde ~5 min depois de um run bem-sucedido
-
----
-
-## 📄 Licença
-
-Dados públicos (DATASUS). Código em repositório público.
-
----
-
-**Última atualização**: [veja commits](https://github.com/MarkusLC/mestrado-ccu-pe/commits/main)
+Dados públicos do DATASUS e do IBGE. Código sob licença MIT.
