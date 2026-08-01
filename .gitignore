@@ -7,6 +7,10 @@ data/bruto/
 data/painel_ccu_pe.csv
 data/painel_ccu_pe.json
 
+# Microdados do SISCAN filtrados para PE — centenas de MB, reproduzíveis com
+# `python3 baixa_microdados.py`.
+data/microdados/
+
 # Python
 __pycache__/
 *.pyc
