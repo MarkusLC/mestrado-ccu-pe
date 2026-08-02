@@ -20,17 +20,40 @@ corte_prov = d['provisorio_a_partir_de']
 idx = {m: i for i, m in enumerate(meses)}
 
 def janela(centro, n=12):
-    """Médias dos n meses antes e depois, ignorando ausentes e provisórios."""
+    """Médias dos n meses antes e depois, com as janelas balanceadas por mês.
+
+    Quando a janela pós é truncada — por competência provisória ou por fim de
+    série —, comparar 12 meses contra 8 mistura efeito com sazonalidade: os 8
+    restantes são de um semestre só. A correção é truncar a janela pré aos
+    **mesmos meses do calendário** que sobraram na pós, de modo que as duas
+    médias tenham a mesma composição sazonal.
+
+    Sem isso, τ4 aparecia como +3,6% quando o que se media era em boa parte a
+    diferença entre um ano inteiro e o segundo semestre.
+    """
     if centro not in idx:
         return None
     c = idx[centro]
-    pre = [razao[i] for i in range(max(0, c - n), c)
-           if razao[i] is not None and meses[i] < corte_prov]
-    pos = [razao[i] for i in range(c, min(len(meses), c + n))
-           if razao[i] is not None and meses[i] < corte_prov]
-    if len(pre) < 6 or len(pos) < 6:
+    usavel = lambda i: (0 <= i < len(meses) and razao[i] is not None
+                        and meses[i] < corte_prov)
+
+    pos_i = [i for i in range(c, c + n) if usavel(i)]
+    pre_i = [i for i in range(c - n, c) if usavel(i)]
+    if len(pos_i) < 6 or len(pre_i) < 6:
         return None
-    return mean(pre), mean(pos), len(pre), len(pos)
+
+    # equilibra a composição sazonal das duas janelas
+    if len(pos_i) < len(pre_i):
+        meses_pos = {meses[i][5:] for i in pos_i}
+        pre_i = [i for i in pre_i if meses[i][5:] in meses_pos]
+    elif len(pre_i) < len(pos_i):
+        meses_pre = {meses[i][5:] for i in pre_i}
+        pos_i = [i for i in pos_i if meses[i][5:] in meses_pre]
+    if len(pre_i) < 6 or len(pos_i) < 6:
+        return None
+
+    return (mean(razao[i] for i in pre_i), mean(razao[i] for i in pos_i),
+            len(pre_i), len(pos_i))
 
 REAIS = [
     ('τ1', '2020-01', 'Previne Brasil'),

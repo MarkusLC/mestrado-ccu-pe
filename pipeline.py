@@ -96,12 +96,17 @@ LINHA_MUN_RESID = (
 COLUNA_MES_CITO = "Mes/Ano competencia|CO_ANO_MES_LIBERACAO|1|SISCAN\\periodo.cnv"
 COLUNA_MES_MAMO = "Mes/Ano competenc|NU_ANO_MES_COMPETENCIA|1|siscan\\periodo.cnv"
 
-# Competência em que o SISCAN não processou dados em nenhuma UF, nem para
-# citopatológico nem para mamografia. Não é zero, é ausência: nenhuma série real
-# de rastreamento zera nacionalmente por um mês. Setembro seguinte recebe o
-# transbordo e fica inflado, por isso os dois meses saem juntos.
-# Ver docs/pesquisa/ALERTAS_AUDITORIA.md
-MESES_INVALIDOS = ("2022-08", "2022-09")
+# Agosto de 2022 não existe no TABNET: a competência não é devolvida como coluna
+# em nenhuma UF. É ausência, não zero — nenhuma série real de rastreamento zera
+# nacionalmente por um mês.
+MESES_INVALIDOS = ("2022-08",)
+
+# Setembro de 2022 existe e traz 31.519 exames em PE — o segundo maior valor do
+# ano. Descartá-lo, como uma versão anterior fazia, jogava fora dado real. Mas o
+# valor está inflado pelo transbordo de agosto, então a competência é mantida e
+# sinalizada: a análise decide entre usá-la, agregá-la a agosto num bimestre, ou
+# censurá-la em sensibilidade.
+MESES_AFETADOS = ("2022-09",)
 
 # Meses finais de qualquer extração ainda acumulam lançamento retroativo e
 # aparecem subestimados. Marcados como provisórios em vez de descartados, para
@@ -347,13 +352,14 @@ def monta_painel():
                         "pop_ano": ano_pop,
                         "pop_defasada": ano_pop != ano,
                         "valido": valido,
+                        "afetado_transbordo": mes in MESES_AFETADOS,
                         "provisorio": mes >= corte_provisorio,
                     })
 
     # CSV, não JSON: é o formato que o glmmTMB consome e ocupa um décimo do espaço.
     import csv
     campos = ["serie", "cod_ibge", "municipio", "faixa", "ano_mes", "exames",
-              "pop_alvo", "pop_ano", "pop_defasada", "valido", "provisorio"]
+              "pop_alvo", "pop_ano", "pop_defasada", "valido", "afetado_transbordo", "provisorio"]
     with open(DADOS / "painel_ccu_pe.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=campos)
         w.writeheader()
@@ -384,6 +390,7 @@ def resume(painel, munis, meses, ultimo, corte):
         "primeira_competencia": min(por_mes) if por_mes else None,
         "ultima_competencia": ultimo,
         "competencias_invalidas": list(MESES_INVALIDOS),
+        "competencias_afetadas": list(MESES_AFETADOS),
         "provisorio_a_partir_de": corte,
         "cobertura_denominador": f"{100 * len(com_pop) / max(1, len(validos)):.1f}%",
         "serie_mensal_estadual": dict(sorted(por_mes.items())),
@@ -424,7 +431,8 @@ def self_check():
     assert normaliza_competencia("2018-13") is None, "mês 13 não existe"
 
     assert len(meses_da_janela()) == 108, f"janela tem {len(meses_da_janela())} meses, esperado 108"
-    assert "2022-08" in MESES_INVALIDOS
+    assert MESES_INVALIDOS == ("2022-08",), "só agosto/2022 é ausência real no TABNET"
+    assert "2022-09" in MESES_AFETADOS, "setembro/2022 tem dado, inflado por transbordo"
 
     # O denominador é por faixa. Replicar a população 25-64 inteira em cada uma
     # das 8 faixas multiplicaria o denominador por 8 e afundaria a razão de
@@ -570,6 +578,32 @@ def gera_dashboard(painel, resumo):
         })
     municipios.sort(key=lambda x: -x["razao"])
 
+    # Municípios que colapsaram: produção de 2025 abaixo de 40% da média de
+    # 2022-23. Não é ruído de município pequeno — exige base de ao menos 20
+    # exames/mês — e a lista é geograficamente concentrada na Zona da Mata Sul.
+    mes_mun = defaultdict(lambda: defaultdict(int))
+    for r in painel:
+        if r["serie"] == "citopatologico" and r["valido"]:
+            mes_mun[r["cod_ibge"]][r["ano_mes"]] += r["exames"]
+
+    def media(s, ini, fim):
+        v = [x for m, x in s.items() if ini <= m <= fim]
+        return sum(v) / len(v) if v else 0
+
+    colapso = []
+    for cod, s in mes_mun.items():
+        base = media(s, "2022-01", "2023-12")
+        atual = media(s, "2025-01", "2025-12")
+        if base >= 20 and atual < 0.4 * base:
+            colapso.append({
+                "cod": cod, "nome": nomes[cod],
+                "base_mensal": round(base, 1), "atual_mensal": round(atual, 1),
+                "pct_do_patamar": round(100 * atual / base, 1),
+                "perda_anual": round(12 * (base - atual)),
+            })
+    colapso.sort(key=lambda x: x["pct_do_patamar"])
+    elegiveis = sum(1 for s in mes_mun.values() if media(s, "2022-01", "2023-12") >= 20)
+
     # Tabulações de qualidade. Ficam em cache: mudam pouco e cada uma custa uma
     # requisição lenta ao TABNET.
     cache_q = DADOS / "qualidade.json"
@@ -603,9 +637,17 @@ def gera_dashboard(painel, resumo):
         "razao_mensal": razao_mes,
         "razao_anual": resumo["razao_de_exames_por_ano"],
         "municipios": municipios,
+        "colapso": {
+            "criterio": ("produção mensal de 2025 abaixo de 40% da média de 2022-23, "
+                         "entre municípios com base de ao menos 20 exames/mês"),
+            "elegiveis": elegiveis,
+            "municipios": colapso,
+            "perda_anual_total": sum(c["perda_anual"] for c in colapso),
+        },
         "ano_referencia": ano_ref,
         "marcos": [m for m in MARCOS if m["mes"] <= meses[-1]],
         "competencias_invalidas": list(MESES_INVALIDOS),
+        "competencias_afetadas": list(MESES_AFETADOS),
         "provisorio_a_partir_de": resumo["provisorio_a_partir_de"],
         "resumo": resumo,
         "gerado_em": time.strftime("%Y-%m-%d"),

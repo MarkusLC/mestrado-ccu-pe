@@ -821,6 +821,38 @@ function montaTabelaMunicipios(d) {
   });
 }
 
+function montaColapso(d) {
+  const c = d.colapso;
+  if (!c || !c.municipios?.length) return;
+  const sec = document.getElementById('s-colapso');
+
+  document.getElementById('nota-colapso').innerHTML =
+    `De ${c.elegiveis} municípios com produção regular antes de 2024 — ao menos vinte exames por mês
+     em 2022 e 2023 —, <b>${c.municipios.length} operam hoje abaixo de 40% daquele patamar</b>.
+     Não é oscilação de município pequeno: o critério exclui quem já tinha volume baixo.`;
+
+  document.querySelector('#tab-colapso tbody').innerHTML = c.municipios.map(m => `<tr>
+    <td>${m.nome}</td>
+    <td class="num">${fmt2(m.base_mensal)}</td>
+    <td class="num">${fmt2(m.atual_mensal)}</td>
+    <td class="num"><b style="color:var(--critical)">${fmt2(m.pct_do_patamar)}%</b></td>
+    <td class="num">${fmt(m.perda_anual)}</td>
+  </tr>`).join('');
+
+  document.getElementById('alerta-colapso').innerHTML =
+    `<b>São ${fmt(c.perda_anual_total)} exames a menos por ano.</b> A lista é geograficamente
+     concentrada: Escada, Palmares, Rio Formoso, Barreiros, Gameleira, Tamandaré, Quipapá, Jaqueira,
+     Belém de Maria e São José da Coroa Grande formam um bloco contíguo na Zona da Mata Sul. Uma
+     queda simultânea numa região inteira aponta para causa comum — encerramento de contrato
+     laboratorial, mudança de prestador ou interrupção de fluxo de amostras —, não para decisão
+     independente de dezenas de gestões municipais.
+     <br><br>Para o estudo, isto contamina o braço pré do marco de maio de 2024: parte da queda
+     começa antes dele, o que viola a suposição de tendência pré-estável. Para a gestão, é o achado
+     mais acionável deste painel, e independe de qualquer modelo. O passo seguinte é consultar o
+     CNES para verificar habilitação de laboratórios de citopatologia nesses municípios.`;
+  sec.hidden = false;
+}
+
 function montaTabelaSeries(d) {
   const invalidas = new Set(d.competencias_invalidas);
   const marcos = Object.fromEntries(d.marcos.map(m => [m.mes, m]));
@@ -967,6 +999,23 @@ function render(d) {
     agrega, na mesma fórmula ponderada, o rastreamento de colo e o de mama, de modo que os dois
     passam a ser co-incentivados.</figcaption>
   </figure></div>
+</section>
+
+<section id="s-colapso" hidden>
+  <h2>Trinta e cinco municípios pararam de rastrear</h2>
+  <p class="note" id="nota-colapso"></p>
+  <div class="card">
+    <div class="scroll"><table id="tab-colapso">
+      <thead><tr>
+        <th>Município</th>
+        <th class="num">Exames/mês em 2022–23</th>
+        <th class="num">Exames/mês em 2025</th>
+        <th class="num">% do patamar</th>
+        <th class="num">Perda anual</th>
+      </tr></thead><tbody></tbody>
+    </table></div>
+    <div class="alerta" id="alerta-colapso"></div>
+  </div>
 </section>
 
 <section>
@@ -1348,6 +1397,7 @@ localidades/estados/26/municipios</code>
   montaAbas();
   montaTabelaMunicipios(d);
   montaTabelaSeries(d);
+  montaColapso(d);
 
   document.getElementById('c-serie').appendChild(serieTemporal(d));
   document.getElementById('c-razao').appendChild(razaoAnual(d));

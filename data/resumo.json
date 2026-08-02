@@ -1,12 +1,14 @@
 {
-  "total_exames_citopatologicos": 2578890,
+  "total_exames_citopatologicos": 2610409,
   "municipios": 185,
-  "meses_com_dado": 100,
+  "meses_com_dado": 101,
   "meses_da_janela": 108,
   "primeira_competencia": "2018-01",
   "ultima_competencia": "2026-06",
   "competencias_invalidas": [
-    "2022-08",
+    "2022-08"
+  ],
+  "competencias_afetadas": [
     "2022-09"
   ],
   "provisorio_a_partir_de": "2026-01",
@@ -67,6 +69,7 @@
     "2022-05": 30406,
     "2022-06": 29087,
     "2022-07": 24758,
+    "2022-09": 31519,
     "2022-10": 29353,
     "2022-11": 35253,
     "2022-12": 31204,
@@ -121,7 +124,7 @@
     "2019": 0.361,
     "2020": 0.219,
     "2021": 0.335,
-    "2022": 0.385,
+    "2022": 0.389,
     "2023": 0.423,
     "2024": 0.376,
     "2025": 0.342,

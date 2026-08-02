@@ -38,24 +38,24 @@
    "pre": 0.409,
    "pos": 0.3558,
    "delta_pct": -13.0,
-   "placebos_maiores": 6,
-   "p_aprox": 0.64
+   "placebos_maiores": 5,
+   "p_aprox": 0.55
   },
   {
    "marco": "τ4",
    "mes": "2025-05",
    "descricao": "mensuração do C7",
-   "pre": 0.3558,
+   "pre": 0.3895,
    "pos": 0.3685,
-   "delta_pct": 3.6,
-   "placebos_maiores": 8,
-   "p_aprox": 0.82
+   "delta_pct": -5.4,
+   "placebos_maiores": 9,
+   "p_aprox": 0.91
   }
  ],
  "placebos": [
   {
    "mes": "2018-07",
-   "delta_pct": 0.4
+   "delta_pct": -12.6
   },
   {
    "mes": "2019-03",
@@ -71,15 +71,15 @@
   },
   {
    "mes": "2022-03",
-   "delta_pct": 14.7
+   "delta_pct": 18.8
   },
   {
    "mes": "2022-11",
-   "delta_pct": 14.2
+   "delta_pct": 11.9
   },
   {
    "mes": "2023-04",
-   "delta_pct": 2.4
+   "delta_pct": 0.4
   },
   {
    "mes": "2023-10",
@@ -91,10 +91,10 @@
   },
   {
    "mes": "2025-02",
-   "delta_pct": -4.1
+   "delta_pct": -7.7
   }
  ],
- "placebo_mediana_abs": 14.2,
+ "placebo_mediana_abs": 13.4,
  "placebo_max_abs": 45.3,
  "placebo_n": 10
 }
